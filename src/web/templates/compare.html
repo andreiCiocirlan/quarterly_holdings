@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{{ filer_name|replace('_', ' ') }} Q{{ filing1.quarter }} {{ filing1.year }} vs Q{{ filing2.quarter }} {{
+        filing2.year }} 13F Holdings Comparison</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+    <script src="{{ url_for('static', filename='js/compare-utils.js') }}"></script>
+</head>
+<body>
+    <div class="container my-5">
+        <a href="/" class="btn btn-secondary mb-3">Back to Home</a>
+        <h2 class="mb-4">Holdings Comparison</h2>
+
+        {% set manager_slug = cik|string + '-' + filer_name|replace('_', '-')|lower %}
+        <h1>
+            <a href="{{ url_for('manager', manager_slug=manager_slug) }}">
+                {{ filer_name | replace('_', ' ') }}
+            </a>
+        </h1>
+
+        <p>
+            Comparing filings:
+            <strong>Q{{ filing1.quarter }} {{ filing1.year }}</strong> ({{ filing1.accession_nr }})
+            vs.
+            <strong>Q{{ filing2.quarter }} {{ filing2.year }}</strong> ({{ filing2.accession_nr }})
+        </p>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered align-middle" id="comparisonTable" style="width:100%">
+                <thead>
+
+                <tr>
+                    <th></th> <!-- empty first column header -->
+                    <th colspan="4" style="text-align:center;">Shares (units)</th>
+                    <th colspan="4" style="text-align:center;">Value ($)</th>
+                </tr>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Q{{ filing1.quarter }} {{ filing1.year }} Shares</th>
+                    <th>Q{{ filing2.quarter }} {{ filing2.year }} Shares</th>
+                    <th>Shares Diff</th>
+                    <th>Shares Chg %</th>
+                    <th>Q{{ filing1.quarter }} {{ filing1.year }} Value</th>
+                    <th>Q{{ filing2.quarter }} {{ filing2.year }} Value</th>
+                    <th>Value Diff</th>
+                    <th>Value Chg %</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in comparison %}
+                <tr>
+                    <td>{{ row.ticker }}</td>
+
+                    <td data-order="{{ row.shares_old }}">{{ row.shares_old | int }}</td>
+                    <td data-order="{{ row.shares_new }}">{{ row.shares_new | int }}</td>
+                    <td data-order="{{ row.shares_diff }}">{{ row.shares_diff | int }}</td>
+
+                    <td>
+                        {% if row.shares_change_pct is none %}
+                        N/A
+                        {% else %}
+                        {{ row.shares_change_pct if row.shares_change_pct in ['NEW', 'REMOVED'] else "%.2f"|format(row.shares_change_pct) + '%' }}
+                        {% endif %}
+                    </td>
+
+                    <td data-order="{{ row.value_old }}">{{ row.value_old | currency }}</td>
+                    <td data-order="{{ row.value_new }}">{{ row.value_new | currency }}</td>
+                    <td data-order="{{ row.value_diff }}">{{ row.value_diff | currency }}</td>
+
+                    <td>
+                        {% if row.value_change_pct is none %}
+                        N/A
+                        {% else %}
+                        {{ row.value_change_pct if row.value_change_pct in ['NEW', 'REMOVED'] else "%.2f"|format(row.value_change_pct) + '%' }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+
+
+</html>

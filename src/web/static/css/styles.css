@@ -1,0 +1,49 @@
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+thead tr:first-child th {
+  background-color: #e0e0e0;
+  border: 1px solid #999;
+  text-align: center;
+  padding: 8px;
+}
+
+thead tr:nth-child(2) th {
+  border: 1px solid #ccc;
+  padding: 6px;
+  background-color: white;
+}
+
+tbody td {
+  border: 1px solid #ccc;
+  padding: 6px;
+}
+
+/* Optional: give the whole table border */
+table, th, td {
+  border: 1px solid #ccc;
+}
+
+tr.green-row,
+tr.green-row td {
+    background-color: rgb(209 250 229) !important;
+}
+
+tr.green-row:hover,
+tr.green-row:hover td {
+    background-color: rgb(167 243 208) !important;
+    cursor: text; /* optional to signal hover */
+}
+
+tr.red-row,
+tr.red-row td {
+    background-color: rgb(254 226 226) !important;
+}
+
+tr.red-row:hover,
+tr.red-row:hover td {
+    background-color: rgb(254, 202, 202) !important;
+    cursor: text; /* optional to signal hover */
+}

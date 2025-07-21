@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Filers Starting with {{ letter }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+<div class="container mt-5">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Most Recent Filing</th>
+            <th>Num Holdings</th>
+            <th>Holdings Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for cik, name, link, accession_nr, year, quarter, holdings_count, holdings_value in filers %}
+        <tr>
+            <td>
+                {% if link %}
+                <a href="{{ filer_url(cik, name) }}">{{ name | replace('_', ' ') }}</a>
+                {% else %}
+                {{ name }}
+                {% endif %}
+            </td>
+            <td>
+                {% if accession_nr %}
+                <a href="{{ url_for('holdings', accession_nr=accession_nr) }}">Q{{ quarter }} {{ year }}</a>
+                {% else %}
+                -
+                {% endif %}
+            </td>
+            <td>{{ holdings_count }}</td>
+            <td>
+                {% if holdings_value %}
+                ${{ '{:,.2f}'.format(holdings_value) }}
+                {% else %}
+                -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
