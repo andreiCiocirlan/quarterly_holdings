@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: filings_db
     ports:
-      - "5433:5432"  # Map container 5432 to host 5433 to avoid conflict if you run other DBs
+      - "5434:5432"  # Map container 5432 to host 5433 to avoid conflict if you run other DBs
     volumes:
       - pgdata:/var/lib/postgresql/data
 
