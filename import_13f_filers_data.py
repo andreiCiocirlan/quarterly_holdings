@@ -476,11 +476,6 @@ def main():
     conn.autocommit = False  # Explicit transaction control
 
     try:
-
-        # create = True
-        create = False
-        if (create):
-
             create_filers_table(conn)
             conn.commit()
             insert_filers(df, conn)
@@ -494,7 +489,7 @@ def main():
 
             create_stocks_table(conn)
             conn.commit()
-        else:
+
             import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=12)
 
             add_filings_holding_count_and_value(conn)
