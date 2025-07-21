@@ -65,7 +65,7 @@ def _get_cusip_set(cusip_to_ticker):
     return set(cusip_to_ticker.keys())
 
 
-filtered_listings = _get_filtered_listings(NASDAQ_FILE_PATH, NASDAQ_FILE_PATH)
+filtered_listings = _get_filtered_listings(NASDAQ_FILE_PATH, NYSE_FILE_PATH)
 cik_to_ticker = _get_cik_to_ticker(filtered_listings)
 ticker_to_cik = _get_ticker_to_cik(filtered_listings)
 cusip_to_ticker = _get_cusip_to_ticker(filtered_listings)
