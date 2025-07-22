@@ -383,7 +383,7 @@ def add_change_ownership_columns(cik_to_filer, tickers=None):
 
             aum_path = os.path.join(quarter_path, aum_folder)
             if not os.path.isdir(aum_path):
-                print(f"Warning: AUM folder {aum_folder} not found in {quarter_path}")
+                print(f"Warning: Reached AUM folder {aum_folder} which has no filings")
                 continue
 
             for fname in os.listdir(aum_path):
