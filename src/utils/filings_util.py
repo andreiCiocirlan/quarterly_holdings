@@ -383,7 +383,7 @@ def add_change_ownership_columns(cik_to_filer, tickers=None):
 
             aum_path = os.path.join(quarter_path, aum_folder)
             if not os.path.isdir(aum_path):
-                print(f"Warning: Reached AUM folder {aum_folder} which has no filings")
+                print(f"Warning: Reached AUM folder {aum_path} which has no filings for {quarter_path}")
                 continue
 
             for fname in os.listdir(aum_path):
@@ -489,11 +489,11 @@ def add_quarter_end_price(cik_to_filer, base_dir=BASE_DIR_FINAL, threshold=0.5):
             df = pd.read_csv(file_path)
             df['quarter_end_price'] = df['share_value'] / df['share_amount'].round(2)
 
-            # prop_below_1 = (df['quarter_end_price'] < 1).mean()
-            # if prop_below_1 > threshold:
-            #     year, quarter = extract_year_quarter_from_filename(file)
-            #     df['quarter_end_price'] = df.apply(lambda row: replace_price(row, year, quarter), axis=1)
-            #     print(f"replaced with dict prices: {file_path}")
+            prop_below_1 = (df['quarter_end_price'] < 1).mean()
+            if prop_below_1 > threshold:
+                year, quarter = extract_year_quarter_from_filename(file)
+                df['quarter_end_price'] = df.apply(lambda row: replace_price(row, year, quarter), axis=1)
+                print(f"replaced with dict prices: {file_path}")
 
             df.to_csv(file_path, index=False)
 
