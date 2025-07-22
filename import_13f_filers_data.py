@@ -467,6 +467,18 @@ def import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=8):
                 print(f"Error in worker: {e}")
 
 
+def drop_all_tables(conn):
+    with conn.cursor() as cur:
+        tables = ['holdings', 'filings', 'stocks', 'filers']  # drop in this order to respect FK dependencies if any
+        for table in tables:
+            try:
+                cur.execute(f"DROP TABLE IF EXISTS {table} CASCADE;")
+                print(f"Dropped table '{table}' if it existed.")
+            except Exception as e:
+                print(f"Error dropping table {table}: {e}")
+    conn.commit()
+
+
 def main():
     # Read CSV
     df = pd.read_csv(ALL_FILERS_CSV)
@@ -476,6 +488,8 @@ def main():
     conn.autocommit = False  # Explicit transaction control
 
     try:
+            drop_all_tables(conn)
+
             create_filers_table(conn)
             conn.commit()
             insert_filers(df, conn)
