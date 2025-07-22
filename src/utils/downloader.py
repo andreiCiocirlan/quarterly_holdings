@@ -146,9 +146,6 @@ def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, us
 
 
 def get_13f_xml(cik: str, accession_number: str, primary_doc="primary_doc.xml"):
-    headers = {
-        "User-Agent": "Your Name your.email@example.com"
-    }
     # remove leading zeros (if any)
     cik_clean = str(int(cik))
     base_url = f"https://www.sec.gov/Archives/edgar/data/{cik_clean}/{accession_number}"
