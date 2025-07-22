@@ -198,7 +198,7 @@ def delete_final_13f_by_accession(cik, restatement_accession, report_date):
                     print(f"Failed to remove {path_to_delete}: {e}")
 
     if not deleted_files:
-        print(f"No previous 13F file found for accession {restatement_accession}, {filer_name}, {year} {quarter}")
+        print(f"No previous 13F final file found for accession {restatement_accession}, {filer_name}, {year} {quarter}")
 
     return deleted_files
 
