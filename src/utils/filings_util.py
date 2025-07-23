@@ -363,7 +363,7 @@ def calculate_changes(df_update, prev_map):
 def add_change_ownership_columns(cik_to_filer, tickers=None):
     aum_folder = CIK_TO_FINAL_DIR.get(list(cik_to_filer)[0])
     shares_df = load_shares_outstanding(STOCKS_SHS_Q_END_PRICES_FILE)
-    filers=cik_to_filer.values()
+    filers = cik_to_filer.values()
     filers_set = set(f.strip().upper() for f in filers)
     tickers_set = set(t.upper() for t in tickers) if tickers is not None else None
 
@@ -382,7 +382,8 @@ def add_change_ownership_columns(cik_to_filer, tickers=None):
 
             aum_path = os.path.join(quarter_path, aum_folder)
             if not os.path.isdir(aum_path):
-                print(f"Warning: Reached AUM folder {aum_path} which has no filings for {quarter_path}")
+                print(f"Warning: Expected filings directory missing: {aum_path}. No filings available "
+                      f"for filer '{aum_folder}' in year {year}, quarter {quarter}. Continuing to next.")
                 continue
 
             for fname in os.listdir(aum_path):
@@ -563,7 +564,7 @@ def get_prev_quarter(year, quarter):
         return year, quarter - 1
 
 
-def find_prev_quarter_file(aum_folder : str, filer_name, prev_year, prev_quarter):
+def find_prev_quarter_file(aum_folder: str, filer_name, prev_year, prev_quarter):
     prev_quarter_folder = f"Q{prev_quarter}"
     search_dir = os.path.join(BASE_DIR_FINAL, str(prev_year), prev_quarter_folder, aum_folder)
 
@@ -580,4 +581,3 @@ def find_prev_quarter_file(aum_folder : str, filer_name, prev_year, prev_quarter
     # If multiple matches (e.g., amendments), pick the latest by filename sorting
     matched_files.sort()
     return matched_files[-1]
-
