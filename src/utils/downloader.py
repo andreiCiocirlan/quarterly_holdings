@@ -208,4 +208,8 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)  # Create directory if missing
         parsed_data.to_csv(file_path, index=False)
-        print(f"Saved {report_date} 13F-HR file: {file_path}")
+        form_type = "13F-HR/A" if amendment_type else "13F-HR"
+        if amendment_type:
+            print(f"Saved {report_date} {form_type} {amendment_type} file: {file_path}")
+        else:
+            print(f"Saved {report_date} {form_type} file: {file_path}")
