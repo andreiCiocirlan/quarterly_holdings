@@ -193,22 +193,22 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
     latest_metadata = latest_filing_metadata(cik, latest_n_filings, skip_quarters_years, use_requests)
     output_path = CIK_TO_PARSED_13F_DIR.get(cik)
     for accession_number, report_date, primary_doc, amendment_type in latest_metadata:
-        accession_number_clean = accession_number.replace('-', '')
-        csv_file_path = os.path.join(output_path, cik, f"{accession_number_clean.lstrip('0')}.csv")
+        accession_number_nodash = accession_number.replace('-', '')
+        csv_file_path = os.path.join(output_path, cik, f"{accession_number_nodash.lstrip('0')}.csv")
         if os.path.exists(csv_file_path):
             continue  # Skip downloading this filing
 
         if amendment_type == 'RESTATEMENT':
             # delete 13F being replaced
             delete_stale_13f_raw(cik, report_date)
-            delete_final_13f_by_accession(cik, accession_number_clean, report_date)
+            delete_final_13f_by_accession(cik, accession_number_nodash, report_date)
 
         # get xml data and parse
-        xml_data = get_13f_xml(cik, accession_number_clean, primary_doc)
-        parsed_data = parse_holdings(xml_data, accession_number_clean, report_date)
+        xml_data = get_13f_xml(cik, accession_number_nodash, primary_doc)
+        parsed_data = parse_holdings(xml_data, accession_number_nodash, report_date)
 
         # save to csv
-        file_path = f"{output_path}/{cik}/{accession_number_clean.lstrip('0')}.csv"
+        file_path = f"{output_path}/{cik}/{accession_number_nodash.lstrip('0')}.csv"
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)  # Create directory if missing
         parsed_data.to_csv(file_path, index=False)
