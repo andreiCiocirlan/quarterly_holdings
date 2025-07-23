@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from utils.mappings import ALL_FILERS_CSV, VALID_QUARTERS
+from utils.mappings import ALL_FILERS_CSV
 
 BASE_URL = "https://13f.info"
 LETTERS = '0abcdefghijklmnopqrstuvwxyz'
@@ -131,8 +131,11 @@ def save_managers_table_with_links(letter, output_csv=ALL_FILERS_CSV):
     # Filter for minimum AUM of $1B or more
     df_filtered = df[df['holdings_value'].str.endswith(('B', 'T'), na=False)]
 
+    # Blackrock 2x ciks, hence Q2 2024 etc. valid quarter
+    valid_quarters = ["Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025", "Q3 2025"]
+
     # Filter for valid quarters (e.g. Q4 2024, Q1 2025)
-    df_filtered = df_filtered[df_filtered['last_reported'].isin(VALID_QUARTERS)]
+    df_filtered = df_filtered[df_filtered['last_reported'].isin(valid_quarters)]
 
     # Add formatted_name and cik columns
     df_filtered['name'] = df_filtered['name'].apply(sanitize_formatted_name)

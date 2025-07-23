@@ -1,6 +1,5 @@
 import re
 import pandas as pd
-from utils.mappings import VALID_QUARTERS
 
 def _parse_holdings_value(value_str):
     if not isinstance(value_str, str):
@@ -33,9 +32,9 @@ import os
 def load_cik_to_filer_and_aum(csv_file):
     if not os.path.exists(csv_file):
         return {}
-
+    valid_quarters = ["Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025", "Q3 2025"]
     df = pd.read_csv(csv_file, dtype=str, usecols=['cik', 'formatted_name', 'holdings_value', 'last_reported'])
-    df = df[df['last_reported'].isin(VALID_QUARTERS)]
+    df = df[df['last_reported'].isin(valid_quarters)]
     df['holdings_billion'] = df['holdings_value'].apply(_parse_holdings_value)
     df = df.dropna(subset=['holdings_billion'])
     return df.set_index('cik')[['formatted_name', 'holdings_billion']].apply(tuple, axis=1).to_dict()
