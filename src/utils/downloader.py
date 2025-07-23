@@ -189,8 +189,8 @@ def get_13f_xml(cik: str, accession_number: str, primary_doc="primary_doc.xml"):
         return None
 
 
-def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=None, use_requests=True):
-    latest_metadata = latest_filing_metadata(cik, latest_n_filings, skip_quarters_years, use_requests)
+def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=None, include_quarters_years=None, use_requests=True):
+    latest_metadata = latest_filing_metadata(cik, latest_n_filings, skip_quarters_years, include_quarters_years, use_requests)
     output_path = CIK_TO_PARSED_13F_DIR.get(cik)
     for accession_number, report_date, primary_doc, amendment_type in latest_metadata:
         accession_number_nodash = accession_number.replace('-', '')
