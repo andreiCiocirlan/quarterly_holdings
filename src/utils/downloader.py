@@ -27,14 +27,15 @@ def get_amendment_type(primary_doc_url):
     return amendment_type  # RESTATEMENT, NEW HOLDINGS, or None
 
 
-def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, use_requests=True):
+def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, include_quarters_years=None, use_requests=True):
     """
     Fetch the latest_n 13F-HR accession numbers and their report dates for a given CIK.
 
     Args:
         cik (str or int): The CIK number.
         latest_n_filings (int): Number of latest filings to return.
-        skip_quarters_years (optional): Quarters/years to skip (not implemented here).
+        skip_quarters_years (optional): Quarters/years to skip.
+        include_quarters_years (optional): Quarters/years to include. Takes priority from skip_quarters_year
         use_requests (bool): If True, fetch data from SEC website; if False, load from local file.
 
     Returns:
@@ -73,6 +74,9 @@ def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, us
 
         year, quarter = get_year_and_quarter(report_date)
         if year is None or quarter is None:
+            continue
+
+        if include_quarters_years and f"{quarter} {year}" not in include_quarters_years:
             continue
 
         if skip_quarters_years and f"{quarter} {year}" in skip_quarters_years:
