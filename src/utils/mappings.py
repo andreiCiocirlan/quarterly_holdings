@@ -1,4 +1,6 @@
 import os
+from collections import defaultdict
+
 import pandas as pd
 
 from utils.data_loader import load_cik_to_filer_and_aum, filter_cik_by_aum
@@ -43,6 +45,23 @@ RAW_PARSED_HOLDINGS_DIRECTORIES = [
 ]
 
 
+def _build_cik_to_accession():
+    cik_to_accessions = defaultdict(list)
+
+    for base_dir in RAW_PARSED_HOLDINGS_DIRECTORIES:
+        if not os.path.isdir(base_dir):
+            continue
+        for cik_folder in os.listdir(base_dir):
+            cik_path = os.path.join(base_dir, cik_folder)
+            if os.path.isdir(cik_path):
+                for filename in os.listdir(cik_path):
+                    if filename.endswith(".csv"):
+                        accession_nr = filename[:-4]  # Remove '.csv'
+                        cik_to_accessions[cik_folder].append(accession_nr)
+
+    return dict(cik_to_accessions)
+
+
 def _build_ticker_year_quarter_dict_for(column):
     if column is None:
         raise ValueError("You must specify a column name")
@@ -61,6 +80,7 @@ def _build_ticker_year_quarter_dict_for(column):
     }
 
     return result_dict
+
 
 def _initialize_mappings():
     cik_to_filer_and_aum = load_cik_to_filer_and_aum(ALL_FILERS_CSV)
@@ -85,6 +105,8 @@ def _initialize_mappings():
     quarter_end_price_dict = _build_ticker_year_quarter_dict_for('quarter_end_price')
     outstanding_shares_dict = _build_ticker_year_quarter_dict_for('outstanding_shares')
 
+    cik_to_accessions = _build_cik_to_accession()
+
     return {
         "CIK_TO_FILER_AND_AUM": cik_to_filer_and_aum,
         "CIK_TO_FILER_AND_AUM_1B_TO_3B": cik_to_filer_and_aum_1b_to_3b,
@@ -104,14 +126,17 @@ def _initialize_mappings():
         "CIK_TO_FILER_OVER_250B": cik_to_filer_over_250b,
 
         "QUARTER_END_PRICE_DICT": quarter_end_price_dict,
-        "OUTSTANDING_SHARES_DICT": outstanding_shares_dict
+        "OUTSTANDING_SHARES_DICT": outstanding_shares_dict,
+        "CIK_TO_ACCESSIONS": cik_to_accessions
 
     }
 
 
 _mappings = _initialize_mappings()
 
+
 CIK_TO_FILER_AND_AUM = _mappings["CIK_TO_FILER_AND_AUM"]
+
 CIK_TO_FILER_AND_AUM_1B_TO_3B = _mappings["CIK_TO_FILER_AND_AUM_1B_TO_3B"]
 CIK_TO_FILER_AND_AUM_3B_TO_5B = _mappings["CIK_TO_FILER_AND_AUM_3B_TO_5B"]
 CIK_TO_FILER_AND_AUM_5B_TO_10B = _mappings["CIK_TO_FILER_AND_AUM_5B_TO_10B"]
@@ -129,10 +154,10 @@ CIK_TO_FILER_50B_TO_250B = _mappings["CIK_TO_FILER_50B_TO_250B"]
 CIK_TO_FILER_OVER_250B = _mappings["CIK_TO_FILER_OVER_250B"]
 QUARTER_END_PRICE_DICT = _mappings["QUARTER_END_PRICE_DICT"]
 OUTSTANDING_SHARES_DICT = _mappings["OUTSTANDING_SHARES_DICT"]
-
+CIK_TO_ACCESSIONS = _mappings["CIK_TO_ACCESSIONS"]
 FILERNAME_TO_CIK = {v[0]: k for k, v in CIK_TO_FILER_AND_AUM.items()}
-FILER_NAMES = tuple(formatted_name for formatted_name, _ in CIK_TO_FILER_AND_AUM.values())
 
+FILER_NAMES = tuple(formatted_name for formatted_name, _ in CIK_TO_FILER_AND_AUM.values())
 CIK_FINAL_DIR_PAIRS = [
     (CIK_TO_FILER_1B_TO_3B, 'aum_1b_to_3b'),
     (CIK_TO_FILER_3B_TO_5B, 'aum_3b_to_5b'),
