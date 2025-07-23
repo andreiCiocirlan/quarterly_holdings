@@ -51,7 +51,7 @@ def create_filings_table(conn):
     create_table_sql = """
         CREATE TABLE IF NOT EXISTS filings (
             accession_nr varchar(50) PRIMARY KEY,   -- accession number as primary key
-            cik INT NOT NULL REFERENCES filers(cik),
+            cik varchar(10) NOT NULL REFERENCES filers(cik),
             holdings_count INT DEFAULT 0,
             holdings_value NUMERIC(20, 2) DEFAULT 0.00,
             year INT NOT NULL,
@@ -68,7 +68,7 @@ def create_filings_table(conn):
 def create_filers_table(conn):
     create_table_sql = """
     CREATE TABLE IF NOT EXISTS filers (
-        cik INTEGER PRIMARY KEY,
+        cik varchar(10) PRIMARY KEY,
         formatted_name TEXT NOT NULL,
         link TEXT
     );

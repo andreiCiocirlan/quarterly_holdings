@@ -167,7 +167,7 @@ def manager(manager_slug):
     match = re.match(r'(\d+)-(.+)', manager_slug)
     if not match:
         abort(404)
-    cik = int(match.group(1))
+    cik = match.group(1)
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -302,10 +302,10 @@ def search_filers():
     cur.execute("""
         SELECT cik, formatted_name
         FROM filers
-        WHERE formatted_name ILIKE %s
+        WHERE formatted_name ILIKE %s or cik ILIKE %s
         ORDER BY formatted_name ASC
         LIMIT 10;
-    """, (f'%{search_term}%',))
+    """, (f'%{search_term}%',f'%{search_term}%'))
     results = cur.fetchall()
     cur.close()
     conn.close()
