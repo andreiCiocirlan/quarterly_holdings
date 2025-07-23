@@ -1,18 +1,17 @@
+import json
+import os
+import re
 import xml.etree.ElementTree as ET
 from datetime import date, timedelta, datetime
 
-import re
-import os
-import json
 import pandas as pd
 import requests
 from lxml import etree
 
 from cfg.cfg_requests import limited_get
 from init_setup.ticker_cusip_data import ticker_to_cik, cik_to_ticker
-from utils.constants import HEADERS
 from utils.date_util import get_year_and_quarter
-from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR
+from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR, HEADERS
 from utils.ticker_util import get_prices_for_all_quarters
 
 STANDARD_MEMBERS = {'CommonStockMember', 'CommonClassAMember'}

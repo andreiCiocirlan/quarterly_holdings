@@ -5,8 +5,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from utils.mappings import ALL_FILERS_CSV
-from utils.constants import VALID_QUARTERS
+from utils.mappings import ALL_FILERS_CSV, VALID_QUARTERS
 
 BASE_URL = "https://13f.info"
 LETTERS = '0abcdefghijklmnopqrstuvwxyz'

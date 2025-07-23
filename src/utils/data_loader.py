@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from utils.constants import VALID_QUARTERS
+from utils.mappings import VALID_QUARTERS
 
 def _parse_holdings_value(value_str):
     if not isinstance(value_str, str):

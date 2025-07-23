@@ -9,11 +9,10 @@ import requests
 from bs4 import BeautifulSoup
 
 from init_setup.ticker_cusip_data import cusip_to_ticker, cusip_set
-from utils.constants import HEADERS
 from utils.date_util import get_year_and_quarter
 from utils.file_util import extract_filername_year_quarter_accession, extract_year_quarter_from_filename
 from utils.mappings import BASE_DIR_FINAL, STOCKS_SHS_Q_END_PRICES_FILE, CIK_TO_PARSED_13F_DIR, \
-    CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER
+    CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER, HEADERS
 
 
 def check_latest_13f(ciks, page_count=5):

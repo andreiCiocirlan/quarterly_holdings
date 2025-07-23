@@ -30,6 +30,9 @@ RAW_13F_PARSED_HOLDINGS_3B_TO_5B = os.path.join(BASE_DIR_DATA_PARSE, 'raw_13f_au
 RAW_13F_PARSED_HOLDINGS_1B_TO_3B = os.path.join(BASE_DIR_DATA_PARSE, 'raw_13f_aum_1b_to_3b')
 BASE_DIR_FINAL = os.path.join(DATA_DIR, 'final')
 
+HEADERS = {'User-Agent': 'test-email@example.com'}
+
+VALID_QUARTERS = ["Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025", "Q2 2025", "Q3 2025"]
 
 RAW_PARSED_HOLDINGS_DIRECTORIES = [
     RAW_13F_PARSED_HOLDINGS_OVER_250B,

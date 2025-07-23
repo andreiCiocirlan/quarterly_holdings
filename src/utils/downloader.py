@@ -8,10 +8,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from cfg.cfg_requests import limited_get
-from utils.constants import HEADERS
 from utils.date_util import get_year_and_quarter
 from utils.filings_util import delete_stale_13f_raw, delete_final_13f_by_accession
-from utils.mappings import CIK_TO_PARSED_13F_DIR, SUBMISSIONS_FILERS_DIR
+from utils.mappings import CIK_TO_PARSED_13F_DIR, SUBMISSIONS_FILERS_DIR, HEADERS
 from utils.parser import parse_holdings
 
 
