@@ -27,7 +27,7 @@ def get_amendment_type(primary_doc_url):
     return amendment_type  # RESTATEMENT, NEW HOLDINGS, or None
 
 
-def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, include_quarters_years=None, use_requests=True):
+def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, include_quarters_years=None, use_requests=False):
     """
     Fetch the latest_n 13F-HR accession numbers and their report dates for a given CIK.
 
