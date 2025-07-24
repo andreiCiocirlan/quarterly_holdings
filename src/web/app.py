@@ -217,11 +217,47 @@ def manager(manager_slug):
         filing_list[5] = formatted_holdings_value
         filings_with_pct.append(tuple(filing_list) + (top_20_pct,))
 
+    if filings:
+        most_recent_accession = filings[0][0]
+        most_recent_year = filings[0][1]
+        most_recent_quarter = filings[0][2]
+    else:
+        most_recent_accession = None
+        most_recent_year = None
+        most_recent_quarter = None
+
+    # --- Get quarterly holdings values for this cik ---
+    cur.execute('''
+        SELECT year, quarter, holdings_value
+        FROM filings
+        WHERE cik = %s
+        ORDER BY year, quarter
+    ''', (cik,))
+
+    quarterly_rows = cur.fetchall()
+    quarterly_data = [
+        {'year': r[0], 'quarter': r[1], 'value': r[2] or 0}
+        for r in quarterly_rows
+    ]
+
     cur.close()
     conn.close()
 
-    return render_template('manager.html', filings=filings_with_pct, cik=cik, formatted_name=filer[1],
-                           top_20_pct=top_20_pct)
+    labels = [f"Q{q['quarter']} {q['year']}" for q in quarterly_data]
+    values = [q['value'] for q in quarterly_data]
+
+    return render_template('manager.html',
+                           filings=filings_with_pct,
+                           cik=cik,
+                           formatted_name=filer[1],
+                           top_20_pct=top_20_pct,
+                           chart_labels=labels,
+                           cik_padded = str(cik).zfill(10),
+                           chart_values=values,
+                           most_recent_accession=most_recent_accession,
+                           most_recent_year=most_recent_year,
+                           most_recent_quarter=most_recent_quarter
+                           )
 
 
 @app.route('/holdings/<accession_nr>')

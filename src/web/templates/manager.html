@@ -10,7 +10,99 @@
     <a href="/" class="btn btn-secondary mb-3">Back to Home</a>
 
     <h2>{{ formatted_name | replace('_', ' ') }}</h2>
-    <h2 class="mb-4">CIK {{ cik }}</h2>
+    <div class="container mb-4">
+        <div class="row justify-content-start">
+            <div class="col-auto" style="width: 600px;">
+
+                <div class="mb-4">
+                    <div class="row mb-2">
+                        <div class="col-6 fw-bold">Most recent 13F</div>
+                        <div class="col-6">
+                            <a href="{{ url_for('holdings', accession_nr=most_recent_accession) }}">
+                                Q{{ most_recent_quarter }} {{ most_recent_year }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 fw-bold">CIK</div>
+                        <div class="col-6">{{ cik_padded }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 fw-bold">All SEC filings</div>
+                        <div class="col-6">
+                            <a href="https://www.sec.gov/cgi-bin/browse-edgar?CIK={{ cik_padded }}" target="_blank" rel="noopener noreferrer">
+                                View on sec.gov
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart block below metadata -->
+                <div style="width: 100%; max-width: 650px; margin: auto;">
+                    <canvas id="holdingsChart" height="250"></canvas>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Chart.js script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('holdingsChart').getContext('2d');
+        const data = {
+          labels: {{ chart_labels | tojson | safe }},
+          datasets: [{
+            label: 'Holdings Value',
+            data: {{ chart_values | tojson | safe }},
+            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+            borderColor: 'rgba(13, 110, 253, 1)',
+            borderWidth: 1
+          }]
+        };
+        const config = {
+          type: 'bar',
+          data: data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  // Optional: You can customize number formatting here
+                  callback: function(value) {
+                    if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B';
+                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+                    return value;
+                  }
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let val = context.parsed.y;
+                    if (val >= 1e9) return '$' + (val / 1e9).toFixed(2) + ' Billion';
+                    if (val >= 1e6) return '$' + (val / 1e6).toFixed(2) + ' Million';
+                    if (val >= 1e3) return '$' + (val / 1e3).toFixed(2) + ' Thousand';
+                    return '$' + val.toLocaleString();
+                  }
+                }
+              }
+            }
+          }
+        };
+        new Chart(ctx, config);
+    </script>
+
 
     {% if filings %}
     <table class="table table-striped table-hover">
