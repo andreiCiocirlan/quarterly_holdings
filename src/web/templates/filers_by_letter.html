@@ -34,13 +34,7 @@
                 {% endif %}
             </td>
             <td>{{ holdings_count }}</td>
-            <td>
-                {% if holdings_value %}
-                ${{ '{:,.2f}'.format(holdings_value) }}
-                {% else %}
-                -
-                {% endif %}
-            </td>
+            <td>{{ holdings_value | format_large_number }}</td>
         </tr>
         {% endfor %}
         </tbody>

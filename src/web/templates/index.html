@@ -44,7 +44,7 @@
                 </a>
             </td>
             <td>{{ filer[2] }}</td>
-            <td>{{ filer[3] }}</td>
+            <td>{{ filer[3] | format_large_number }}</td>
             <td><a href="{{ url_for('holdings', accession_nr=filer[4]) }}">Q{{ filer[6] }} {{ filer[5] }}</a></td>
         </tr>
         {% endfor %}
