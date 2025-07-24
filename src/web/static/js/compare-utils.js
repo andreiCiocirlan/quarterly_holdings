@@ -12,6 +12,7 @@ $(document).ready(function() {
       { targets: [5, 6, 7], type: 'num-fmt' },      // value columns
       { targets: [4, 8], type: 'custom-percent' },  // your change % columns
     ],
+    dom: '<"d-flex justify-content-start my-3"f>rtip',
     language: {
       searchPlaceholder: "Filter comparison results..."
     },
