@@ -37,6 +37,7 @@ $(document).ready(function() {
     language: {
       searchPlaceholder: "Filter holdings..."
     },
+    dom: '<"d-flex justify-content-start my-3"f>rtip',
     responsive: true,  // Optional: enable responsive extension if included
     deferRender: true  // Improves performance on large tables
   });
