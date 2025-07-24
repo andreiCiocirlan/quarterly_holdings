@@ -64,7 +64,7 @@ def filer_url(cik, formatted_name):
 
 # Register as Jinja2 global
 app.jinja_env.globals.update(filer_url=filer_url)
-
+app.jinja_env.filters['format_large_number'] = format_large_number
 
 @app.route('/')
 def index():
