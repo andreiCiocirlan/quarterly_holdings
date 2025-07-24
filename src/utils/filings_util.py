@@ -487,7 +487,7 @@ def add_quarter_end_price(cik_to_filer, base_dir=BASE_DIR_FINAL, threshold=0.5):
 
             file_path = os.path.join(root, file)
             df = pd.read_csv(file_path)
-            df['quarter_end_price'] = df['share_value'] / df['share_amount'].round(2)
+            df['quarter_end_price'] = (df['share_value'] / df['share_amount']).round(2)
 
             prop_below_1 = (df['quarter_end_price'] < 1).mean()
             if prop_below_1 > threshold:
