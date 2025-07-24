@@ -1,10 +1,19 @@
-table {
-  border-collapse: collapse;
-  width: 100%;
+table.table {
+  width: auto !important;
+  margin-left: 0 !important;    /* align left */
+  margin-right: auto !important; /* keep right margin auto */
+}
+
+/* Center the text horizontally and vertically in all table cells */
+table th, table td {
+  text-align: center;
+  vertical-align: middle;  /* optional, for vertical centering */
+  padding: 4px 6px;        /* reduce padding for less space */
+  white-space: nowrap;     /* prevents cell content from wrapping and widening cells */
 }
 
 thead tr:first-child th {
-  background-color: #e0e0e0;
+  background-color: #444;  /* Darker gray */
   border: 1px solid #999;
   text-align: center;
   padding: 8px;
