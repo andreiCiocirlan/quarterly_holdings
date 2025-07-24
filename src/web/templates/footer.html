@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<footer class="sticky-bottom bg-dark text-white py-3"
+        style="width: 100%; border-top: 1px solid #444;">
+  <div class="container d-flex justify-content-center">
+    <nav aria-label="Letter navigation">
+      <ul class="pagination pagination-sm mb-0">
+        {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+        <li class="page-item">
+          <a class="page-link bg-dark text-white border-0 px-2" href="{{ url_for('filers_by_letter', letter=letter) }}">
+            {{ letter }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
