@@ -1,16 +1,4 @@
 
-const filterInput = document.getElementById('filterInput');
-if (filterInput) {
-  document.getElementById('filterInput').addEventListener('input', function() {
-    const filterText = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#holdingsTable tbody tr');
-
-    rows.forEach(row => {
-      const rowText = row.textContent.toLowerCase();
-      row.style.display = rowText.includes(filterText) ? '' : 'none';
-    });
-  });
-}
 
 $(document).ready(function() {
   // Handle compareSelect navigation
