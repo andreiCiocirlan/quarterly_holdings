@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Quarterly Holdings for {{ ticker }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-</head>
-<body>
-<div class="container mt-4">
-  <h1>Quarterly Holdings for {{ ticker }}</h1>
+{% extends 'base.html' %}
+
+{% block title %}
+  Quarterly Holdings for {{ ticker }}
+{% endblock %}
+
+{% block content %}
+
+  <h2>Quarterly Holdings for {{ ticker }}</h2>
 
   {% if holdings %}
   <table class="table table-striped table-hover table-sm">
@@ -42,6 +41,4 @@
   <p>No holdings data found for ticker {{ ticker }}.</p>
   {% endif %}
 
-</div>
-</body>
-</html>
+{% endblock %}
