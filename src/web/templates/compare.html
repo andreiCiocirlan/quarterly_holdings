@@ -1,23 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>{{ filer_name|replace('_', ' ') }} Q{{ filing1.quarter }} {{ filing1.year }} vs Q{{ filing2.quarter }} {{
-        filing2.year }} 13F Holdings Comparison</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+{% extends 'base.html' %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
-    <script src="{{ url_for('static', filename='js/compare-utils.js') }}"></script>
-</head>
-<body>
-    <div class="container my-5">
-        <a href="/" class="btn btn-secondary mb-3">Back to Home</a>
-        <h2 class="mb-4">Holdings Comparison</h2>
+{% endblock %}
+
+{% block title %}
+    {{ filer_name|replace('_', ' ') }} Q{{ filing1.quarter }} {{ filing1.year }} vs Q{{ filing2.quarter }} {{ filing2.year }} 13F Holdings Comparison
+{% endblock %}
+
+
+{% block content %}
 
         {% set manager_slug = cik|string + '-' + filer_name|replace('_', '-')|lower %}
         <h1>
@@ -87,9 +80,12 @@
                 </tbody>
             </table>
         </div>
-    </div>
-</body>
+
+{% endblock %}
 
 
-
-</html>
+{% block scripts %}
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+    <script src="{{ url_for('static', filename='js/compare-utils.js') }}"></script>
+{% endblock %}
