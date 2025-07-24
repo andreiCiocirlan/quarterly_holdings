@@ -407,13 +407,11 @@ def compare_holdings(accession_nr, compare_accession_nr):
     filer_row = cur.fetchone()
     filer_name = filer_row[0] if filer_row else "Unknown Filer"
 
-    # Determine older and newer filing by (year, quarter)
-    if (year1, quarter1) <= (year2, quarter2):
-        older_accession, newer_accession = accession_nr, compare_accession_nr
-        older_filing, newer_filing = filing1, filing2
-    else:
-        older_accession, newer_accession = compare_accession_nr, accession_nr
-        older_filing, newer_filing = filing2, filing1
+    newer_accession = accession_nr
+    older_accession = compare_accession_nr
+    newer_filing = filing1
+    older_filing = filing2
+    latest_accession_nr = newer_accession
 
     # Fetch holdings for older filing
     cur.execute('SELECT * FROM holdings WHERE accession_nr = %s', (older_accession,))
@@ -497,7 +495,8 @@ def compare_holdings(accession_nr, compare_accession_nr):
         filing2={'accession_nr': newer_accession, 'year': newer_filing[1], 'quarter': newer_filing[2]},
         filer_name=filer_name,
         cik=cik1,
-        all_filings=all_filings
+        all_filings=all_filings,
+        latest_accession_nr=latest_accession_nr
     )
 
 

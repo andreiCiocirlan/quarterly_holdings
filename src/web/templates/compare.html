@@ -28,7 +28,7 @@
                     <option value="" selected disabled>Select filing to compare</option>
                     {% for accession, year, quarter in all_filings %}
                     {% if accession != filing1.accession_nr and accession != filing2.accession_nr %}
-                    <option value="{{ url_for('compare_holdings', accession_nr=filing1.accession_nr, compare_accession_nr=accession) }}">
+                    <option value="{{ url_for('compare_holdings', accession_nr=latest_accession_nr, compare_accession_nr=accession) }}">
                         Q{{ quarter }} {{ year }}
                     </option>
                     {% endif %}
@@ -40,7 +40,7 @@
 
 
 
-<p>
+        <p>
             Comparing filings:
             <strong>Q{{ filing1.quarter }} {{ filing1.year }}</strong> ({{ filing1.accession_nr }})
             vs.
