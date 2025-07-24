@@ -28,6 +28,7 @@ $(document).ready(function() {
     dom: '<"top"f>rt<"bottom"lip><"clear">',
     pageLength: 50,
     order: [[0, 'asc']], // Default sort by Rank ascending
+    ordering: true,
     columnDefs: [
       { targets: [0, 2, 5], type: 'num' },        // Rank, Shares, Change as numeric
       { targets: [3], type: 'num-fmt' },          // Value (currency)
@@ -41,5 +42,6 @@ $(document).ready(function() {
   });
 
   new $.fn.dataTable.FixedHeader(table);
-
+  $('#loadingIndicator').hide();
+  $('#holdingsTableContainer').show();
 });
