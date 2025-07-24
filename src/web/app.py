@@ -331,7 +331,10 @@ def search_filers():
         return jsonify([])  # return empty list for short queries
 
     # Replace spaces with underscores to match stored formatted_name
-    search_term = q.replace(' ', '_')
+    if q.startswith('0') and q.lstrip('0').isdigit():
+        search_term = q.lstrip('0') or '0'
+    else:
+        search_term = q.replace(' ', '_')
 
     conn = get_db_connection()
     cur = conn.cursor()
