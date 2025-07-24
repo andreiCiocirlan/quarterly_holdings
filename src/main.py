@@ -1,7 +1,5 @@
-from utils.downloader import download_filing_to_csv
 from utils.filings_util import generate_13f_and_add_chg_ownership_for_ciks
-from utils.mappings import CIK_TO_FILER_OVER_250B, NYSE_FILE_PATH, NASDAQ_FILE_PATH, CIK_TO_FILER, \
-    CIK_TO_FILER_50B_TO_250B
+from utils.mappings import CIK_TO_FILER_OVER_250B
 
 
 def main():
@@ -17,9 +15,10 @@ def main():
     ]
 
     # STEP 0 : import raw 13f for ciks (start with CIK_TO_FILER_OVER_250B as it has fewer filers)
-    # for cik in CIK_TO_FILER_50B_TO_250B.keys():
-    #     download_filing_to_csv(cik, latest_n_filings=5, use_requests=False)
-    generate_13f_and_add_chg_ownership_for_ciks(CIK_TO_FILER, CIK_TO_FILER_50B_TO_250B.keys())
+    # for cik_to_filer in cik_to_filers:
+        # for cik in cik_to_filer.keys():
+            # download_filing_to_csv(cik, latest_n_filings=5, use_requests=False)
+        # generate_13f_and_add_chg_ownership_for_ciks(cik_to_filer.keys())
 
 
     # STEP 1 : delete all csvs, clean-slate
@@ -27,7 +26,7 @@ def main():
 
     # STEP 2 : generate final 13f from raw-parsed 13f  (make sure prop_below_1 is commented in add_quarter_end_price)
     # for cik_to_filer in cik_to_filers:
-    #     generate_13f_and_add_chg_ownership_for_ciks(cik_to_filer, cik_to_filer.keys())
+    #     generate_13f_and_add_chg_ownership_for_ciks(cik_to_filer.keys())
 
     # STEP 3 : make sure STOCKS_SHS_Q_END_PRICES_FILE has no quarter_end_price values
     # remove_column_values_from_file(file=STOCKS_SHS_Q_END_PRICES_FILE)
@@ -46,7 +45,7 @@ def main():
     # found_ciks = ['1094749']
     # for cik in found_ciks:
     #     download_filing_to_csv(cik, latest_n_filings=1, use_requests=False)
-    # generate_13f_and_add_chg_ownership_for_ciks(CIK_TO_FILER, found_ciks)
+    # generate_13f_and_add_chg_ownership_for_ciks(found_ciks)
 
 
 

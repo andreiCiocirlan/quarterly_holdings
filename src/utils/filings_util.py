@@ -287,8 +287,8 @@ def delete_stale_13f_raw(cik, report_date):
                     print(f"Warning: Could not read {existing_path} due to {e}. Skipping deletion.")
 
 
-def generate_13f_and_add_chg_ownership_for_ciks(cik_to_filer: dict[str, str], ciks: set[str] | list[str]):
-    filtered_cik_to_filer = {cik: name for cik, name in cik_to_filer.items() if cik in ciks}
+def generate_13f_and_add_chg_ownership_for_ciks(ciks: set[str] | list[str]):
+    filtered_cik_to_filer = {cik: name for cik, name in CIK_TO_FILER.items() if cik in ciks}
     if filtered_cik_to_filer:
         _generate_13f_and_add_change_ownership_column(filtered_cik_to_filer)
     else:
