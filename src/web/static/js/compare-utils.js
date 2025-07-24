@@ -1,5 +1,16 @@
 $(document).ready(function() {
 
+  // Handle compareSelect navigation
+  const compareSelect = document.getElementById('compareSelect');
+  if (compareSelect) {
+    compareSelect.addEventListener('change', function () {
+      const url = this.value;
+      if (url) {
+        window.location.href = url;  // Navigate to the selected URL
+      }
+    });
+  }
+
   // Initialize DataTables with FixedHeader
   var table = $('#comparisonTable').DataTable({
     dom: '<"top"f>rt<"bottom"lip><"clear">',

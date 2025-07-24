@@ -426,9 +426,6 @@ def compare_holdings(accession_nr, compare_accession_nr):
     rows_newer = cur.fetchall()
     holdings_newer = [dict(zip(columns, row)) for row in rows_newer] if columns else []
 
-    cur.close()
-    conn.close()
-
     holdings_older_dict = {h['ticker']: h for h in holdings_older}
     holdings_newer_dict = {h['ticker']: h for h in holdings_newer}
 
@@ -488,13 +485,19 @@ def compare_holdings(accession_nr, compare_accession_nr):
     # Sort by value_new desc
     comparison.sort(key=lambda x: x['value_new'] if x['value_new'] is not None else 0, reverse=True)
 
+    cur = conn.cursor()
+    cur.execute('SELECT accession_nr, year, quarter FROM filings WHERE cik = %s ORDER BY year DESC, quarter DESC', (cik1,))
+    all_filings = cur.fetchall()
+    cur.close()
+
     return render_template(
         'compare.html',
         comparison=comparison,
         filing1={'accession_nr': older_accession, 'year': older_filing[1], 'quarter': older_filing[2]},
         filing2={'accession_nr': newer_accession, 'year': newer_filing[1], 'quarter': newer_filing[2]},
         filer_name=filer_name,
-        cik=cik1
+        cik=cik1,
+        all_filings=all_filings
     )
 
 

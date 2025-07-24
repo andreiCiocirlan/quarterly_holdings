@@ -19,7 +19,28 @@
             </a>
         </h1>
 
-        <p>
+        <div class="row align-items-center mb-3">
+            <div class="col-auto">
+                <label for="compareSelect" class="form-label fw-bold">Compare to</label>
+            </div>
+            <div class="col-auto">
+                <select id="compareSelect" class="form-select">
+                    <option value="" selected disabled>Select filing to compare</option>
+                    {% for accession, year, quarter in all_filings %}
+                    {% if accession != filing1.accession_nr and accession != filing2.accession_nr %}
+                    <option value="{{ url_for('compare_holdings', accession_nr=filing1.accession_nr, compare_accession_nr=accession) }}">
+                        Q{{ quarter }} {{ year }}
+                    </option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+
+
+
+<p>
             Comparing filings:
             <strong>Q{{ filing1.quarter }} {{ filing1.year }}</strong> ({{ filing1.accession_nr }})
             vs.
