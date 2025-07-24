@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Holdings history for {{ ticker }}
+{% endblock %}
+
+{% block content %}
+  {% set manager_slug = cik|string + '-' + filer_name|replace('_', '-')|lower %}
+  <h2>
+    <a href="{{ url_for('manager', manager_slug=manager_slug) }}">
+      {{ filer_name | replace('_', ' ') }}
+    </a>
+  </h2>
+  <h3>13F Holdings History for</h3>
+  <h2>{{ ticker }}</h2>
+
+  <table class="table table-striped table-bordered align-middle">
+    <thead>
+    <tr>
+      <th>Period</th>
+      <th>Shares</th>
+      <th>Value ($)</th>
+      <th>% Holdings</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for entry in history %}
+    <tr>
+      <td>
+        <a href="{{ url_for('ticker_quarter_detail', ticker=ticker, year=entry.year, quarter=entry.quarter) }}">
+          Q{{ entry.quarter }} {{ entry.year }}
+        </a>
+      </td>
+      <td>{{ entry.shares | int }}</td>
+      <td>{{ entry.value | currency }}</td>
+      <td>{{ entry.pct_holdings | format_percent_or_na(2) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}

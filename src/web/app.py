@@ -558,5 +558,58 @@ def ticker_quarter_detail(ticker, year, quarter):
                            quarter=quarter,
                            holders=holders)
 
+
+@app.route('/filer/<string:cik>/ticker/<string:ticker>/history')
+def ticker_history(cik, ticker):
+    ticker = ticker.upper()
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Fetch filer name for the CIK
+    cur.execute('SELECT formatted_name  FROM filers WHERE cik = %s', (cik,))
+    filer_row = cur.fetchone()
+    filer_name = filer_row[0] if filer_row else "Unknown Filer"
+
+    # Query all filings of the filer that include this ticker, ordered by year, quarter descending
+    query = """
+        SELECT 
+            f.year,
+            f.quarter,
+            h.share_amount,
+            h.share_value,
+            f.holdings_value,
+            (h.share_value::numeric / f.holdings_value::numeric) * 100 AS pct_holdings
+        FROM filings f
+        JOIN holdings h ON f.accession_nr = h.accession_nr
+        WHERE f.cik = %s AND UPPER(h.ticker) = %s
+        ORDER BY f.year DESC, f.quarter DESC
+    """
+    cur.execute(query, (cik, ticker))
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    if not rows:
+        abort(404, description=f"No holdings found for ticker '{ticker}' and filer CIK {cik}")
+
+    # Prepare data for template
+    history = [{
+        "year": year,
+        "quarter": quarter,
+        "shares": share_amount,
+        "value": share_value,
+        "holdings_value": holdings_value,
+        "pct_holdings": pct_holdings
+    } for year, quarter, share_amount, share_value, holdings_value, pct_holdings in rows]
+
+    return render_template('ticker_history.html',
+                           ticker=ticker,
+                           filer_name=filer_name,
+                           cik=cik,
+                           history=history)
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

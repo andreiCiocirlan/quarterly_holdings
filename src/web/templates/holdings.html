@@ -65,7 +65,11 @@
                 {% for h in holdings %}
                 <tr>
                     <td data-order="{{ h.rank if h.rank is not none else -1 }}">{{ h.rank if h.rank is not none else '-' }}</td>
-                    <td><a href="{{ url_for('ticker_quarterly_holdings', ticker=h.ticker) }}">{{ h.ticker }}</a></td>
+                    <td>
+                        <a href="{{ url_for('ticker_history', cik=cik, ticker=h.ticker) }}">
+                            {{ h.ticker }}
+                        </a>
+                    </td>
                     <td data-order="{{ h.share_amount if h.share_amount is not none else 0 }}">{{ h.share_amount if h.share_amount is not none else '-' }}</td>
                     <td data-order="{{ h.share_value if h.share_value is not none else 0 }}">{{ h.share_value | format_number_or_na }}</td>
                     <td>{{ h.percentage | format_percent_or_na(2) }}</td>
