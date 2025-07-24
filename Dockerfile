@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "import_13f_filers_data.py"]
+CMD ["python", "import_13f_data.py"]
