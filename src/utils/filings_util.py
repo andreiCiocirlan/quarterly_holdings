@@ -203,7 +203,7 @@ def delete_final_13f_by_accession(cik, restatement_accession, report_date):
 
 
 
-def combine_quarterly_files(folder_path, filer_name, cik_to_filer, CIK_TO_FINAL_DIR, BASE_DIR_FINAL, cusip_set, cusip_to_ticker):
+def combine_quarterly_files(folder_path, filer_name, cik):
     # Step 1: Group filenames by CONFORMED_DATE
     files_by_date = {}
     for fname in os.listdir(folder_path):
@@ -257,7 +257,7 @@ def combine_quarterly_files(folder_path, filer_name, cik_to_filer, CIK_TO_FINAL_
         quarter = (month - 1) // 3 + 1
 
         # Save
-        aum_folder = CIK_TO_FINAL_DIR.get(list(cik_to_filer)[0])
+        aum_folder = CIK_TO_FINAL_DIR.get(cik)
         output_dir = Path(BASE_DIR_FINAL) / year / f"Q{quarter}" / aum_folder
         output_dir.mkdir(parents=True, exist_ok=True)
         filename = f"{filer_name}_{year}_Q{quarter}-{accession_nr}.csv"
@@ -303,19 +303,14 @@ def _generate_13f_and_add_change_ownership_column(cik_to_filer: dict[str, str], 
 
 # convert raw csv to shorter version: rank,ticker,share_amount,share_value
 def _generate_13f_csv(cik_to_filer: dict[str, str]):
-    source_dir = CIK_TO_PARSED_13F_DIR.get(list(cik_to_filer)[0])
     for cik, filer_name in cik_to_filer.items():
+        source_dir = CIK_TO_PARSED_13F_DIR.get(cik)
         folder_path = os.path.join(source_dir, cik)  # Combine base_dir and CIK
         if not os.path.isdir(folder_path):
             continue
 
         # Replace the flat file loop with the combine-per-quarter logic!
-        combine_quarterly_files(
-            folder_path, filer_name,
-            cik_to_filer,
-            CIK_TO_FINAL_DIR, BASE_DIR_FINAL,
-            cusip_set, cusip_to_ticker
-        )
+        combine_quarterly_files(folder_path, filer_name, cik)
 
 
 def load_shares_outstanding(file_path):
@@ -361,107 +356,111 @@ def calculate_changes(df_update, prev_map):
 
 
 def add_change_ownership_columns(cik_to_filer, tickers=None):
-    aum_folder = CIK_TO_FINAL_DIR.get(list(cik_to_filer)[0])
     shares_df = load_shares_outstanding(STOCKS_SHS_Q_END_PRICES_FILE)
-    filers = cik_to_filer.values()
-    filers_set = set(f.strip().upper() for f in filers)
     tickers_set = set(t.upper() for t in tickers) if tickers is not None else None
 
     quarters_order = ['Q4', 'Q3', 'Q2', 'Q1']
     years = sorted([d for d in os.listdir(BASE_DIR_FINAL) if d.isdigit()], reverse=True)
 
-    for year in years:
-        year_path = os.path.join(BASE_DIR_FINAL, year)
-        if not os.path.isdir(year_path):
+    for cik, filer_name in cik_to_filer.items():
+        aum_folder = CIK_TO_FINAL_DIR.get(cik)
+        if not aum_folder:
+            print(f"Warning: No aum_folder found for CIK {cik}. Skipping.")
             continue
+        filer_upper = filer_name.strip().upper()
 
-        for quarter in quarters_order:
-            quarter_path = os.path.join(year_path, quarter)
-            if not os.path.isdir(quarter_path):
+        for year in years:
+            year_path = os.path.join(BASE_DIR_FINAL, year)
+            if not os.path.isdir(year_path):
                 continue
 
-            aum_path = os.path.join(quarter_path, aum_folder)
-            if not os.path.isdir(aum_path):
-                print(f"Warning: Expected filings directory missing: {aum_path}. No filings available "
-                      f"for filer '{aum_folder}' in year {year}, quarter {quarter}. Continuing to next.")
-                continue
-
-            for fname in os.listdir(aum_path):
-                if not fname.endswith('.csv'):
+            for quarter in quarters_order:
+                quarter_path = os.path.join(year_path, quarter)
+                if not os.path.isdir(quarter_path):
                     continue
 
-                filer_name, file_year, file_quarter = parse_filer_info_from_filename(fname)
-                if not filer_name or not file_year or not file_quarter:
-                    print(f"Skipping file with unexpected name format: {fname}")
+                aum_path = os.path.join(quarter_path, aum_folder)
+                if not os.path.isdir(aum_path):
+                    print(f"Warning: Expected filings directory missing: {aum_path}. No filings available "
+                          f"for filer '{filer_name}' in year {year}, quarter {quarter}. Continuing to next.")
                     continue
-                if filer_name.strip().upper() not in filers_set:
-                    continue
 
-                file_path = os.path.join(aum_path, fname)
-                try:
-                    df_cur = read_and_normalize_csv(file_path)
-
-                    # Keep only rows with positive share_amount
-                    df_cur = df_cur[df_cur['share_amount'] > 0]
-
-                    if tickers_set is not None:
-                        mask = df_cur['ticker'].str.upper().isin(tickers_set)
-                    else:
-                        mask = pd.Series(True, index=df_cur.index)
-
-                    if not mask.any():
+                for fname in os.listdir(aum_path):
+                    if not fname.endswith('.csv'):
                         continue
 
-                    df_update = df_cur.loc[mask].copy()
+                    filer_file_name, file_year, file_quarter = parse_filer_info_from_filename(fname)
+                    if not filer_name or not file_year or not file_quarter:
+                        print(f"Skipping file with unexpected name format: {fname}")
+                        continue
+                    if filer_file_name.strip().upper() != filer_upper:
+                        continue
 
-                    # Previous quarter info
-                    prev_year, prev_quarter = get_prev_quarter(file_year, file_quarter)
-                    prev_file_path = find_prev_quarter_file(aum_folder, filer_name, prev_year, prev_quarter)
+                    file_path = os.path.join(aum_path, fname)
+                    try:
+                        df_cur = read_and_normalize_csv(file_path)
 
-                    prev_map = {}
-                    if prev_file_path:
-                        prev_map = get_prev_shares_map(prev_file_path)
+                        # Keep only rows with positive share_amount
+                        df_cur = df_cur[df_cur['share_amount'] > 0]
 
-                    # Add year and quarter columns for merging later
-                    df_update['year'] = int(file_year)
-                    df_update['quarter'] = f"Q{file_quarter}"
+                        if tickers_set is not None:
+                            mask = df_cur['ticker'].str.upper().isin(tickers_set)
+                        else:
+                            mask = pd.Series(True, index=df_cur.index)
 
-                    # Calculate changes (NEW, CLOSED_OUT logic removed)
-                    df_update[['change', 'change_pct']] = calculate_changes(df_update, prev_map)
+                        if not mask.any():
+                            continue
 
-                    # Merge with shares outstanding to calculate ownership_pct
-                    merged = df_update.merge(
-                        shares_df,
-                        on=['ticker', 'year', 'quarter'],
-                        how='left',
-                        validate='many_to_one'
-                    )
+                        df_update = df_cur.loc[mask].copy()
 
-                    merged['ownership_pct'] = (merged['share_amount'] / merged['outstanding_shares']) * 100
+                        # Previous quarter info
+                        prev_year, prev_quarter = get_prev_quarter(file_year, file_quarter)
+                        prev_file_path = find_prev_quarter_file(aum_folder, filer_name, prev_year, prev_quarter)
 
-                    merged = merged.drop(columns=['year', 'quarter', 'outstanding_shares'])
+                        prev_map = {}
+                        if prev_file_path:
+                            prev_map = get_prev_shares_map(prev_file_path)
 
-                    df_update = merged
+                        # Add year and quarter columns for merging later
+                        df_update['year'] = int(file_year)
+                        df_update['quarter'] = f"Q{file_quarter}"
 
-                    # Update df_cur inplace
-                    for col in ['change', 'change_pct', 'ownership_pct']:
-                        if col not in df_cur.columns:
+                        # Calculate changes (NEW, CLOSED_OUT logic removed)
+                        df_update[['change', 'change_pct']] = calculate_changes(df_update, prev_map)
+
+                        # Merge with shares outstanding to calculate ownership_pct
+                        merged = df_update.merge(
+                            shares_df,
+                            on=['ticker', 'year', 'quarter'],
+                            how='left',
+                            validate='many_to_one'
+                        )
+
+                        merged['ownership_pct'] = (merged['share_amount'] / merged['outstanding_shares']) * 100
+
+                        merged = merged.drop(columns=['year', 'quarter', 'outstanding_shares'])
+
+                        df_update = merged
+
+                        # Update df_cur inplace
+                        for col in ['change', 'change_pct', 'ownership_pct']:
+                            if col not in df_cur.columns:
+                                if col == 'change':
+                                    df_cur[col] = pd.Series(dtype='object')
+                                else:
+                                    df_cur[col] = np.nan
                             if col == 'change':
-                                df_cur[col] = pd.Series(dtype='object')
-                            else:
-                                df_cur[col] = np.nan
-                        if col == 'change':
-                            df_cur[col] = df_cur[col].astype(object)  # Important for mixed types
-                        df_cur.loc[mask, col] = df_update[col].values
+                                df_cur[col] = df_cur[col].astype(object)  # Important for mixed types
+                            df_cur.loc[mask, col] = df_update[col].values
 
-                    # Handle mixed types in 'change' column
-                    df_cur['change'] = df_cur['change'].astype(object)
+                        # Handle mixed types in 'change' column
+                        df_cur['change'] = df_cur['change'].astype(object)
 
-                    df_cur.to_csv(file_path, index=False)
-                    print(f"Processed {fname} successfully, updated {mask.sum()} rows.")
+                        df_cur.to_csv(file_path, index=False)
+                        # print(f"Processed {fname} successfully, updated {mask.sum()} rows.")
 
-                except Exception as e:
-                    print(f"Error processing {fname}: {e}")
+                    except Exception as e:
+                        print(f"Error processing {fname}: {e}")
 
 
 def replace_price(row, year, quarter):
