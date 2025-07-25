@@ -1,9 +1,14 @@
+import json
 import math
 import os
 import re
 
+import pandas as pd
+import plotly.express as px
 import psycopg
-from flask import Flask, jsonify, request, abort, render_template
+from flask import Flask, render_template
+from flask import jsonify, request, abort
+from plotly.utils import PlotlyJSONEncoder
 
 app = Flask(__name__)
 
@@ -101,12 +106,27 @@ def index():
 
     # Convert tuples to lists to allow modification
     filers = []
+    # Keep raw numeric holdings_value separately for pie chart, formatted string for display
     for filer in filers_raw:
         filer_list = list(filer)
-        filer_list[3] = format_large_number(filer_list[3])  # Format holdings_value (4th element, index 3)
-        filers.append(tuple(filer_list))
+        raw_value = filer_list[3]  # numeric holdings_value
+        # Append tuple (with numeric value added as new item for sorting/charting)
+        filers.append(tuple(filer_list + [raw_value or 0]))
 
-    return render_template('index.html', filers=filers)
+    # Sort using the raw numeric holdings_value (the last element)
+    top5 = sorted(filers, key=lambda x: x[-1], reverse=True)[:10]
+    data = {
+        'name': [f[1].replace('_', ' ') for f in top5],      # filer name
+        'holdings': [f[-1] for f in top5]                  # raw numeric holdings_value
+    }
+
+    fig = px.pie(data, names='name', values='holdings', title="Holdings Value Top 10 Filers")
+    fig.update_traces(
+        hovertemplate='%{label}: %{value:,.0f}<extra></extra>'
+    )
+    graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
+
+    return render_template('index.html', filers=filers, graphJSON=graphJSON)
 
 
 @app.route('/letter/<letter>')
@@ -545,8 +565,7 @@ def ticker_quarter_detail(ticker, year, quarter):
           h.ticker = %s
           AND f.year = %s
           AND f.quarter = %s
-        ORDER BY h.ownership_pct DESC NULLS LAST, h.share_amount DESC NULLS LAST;
-    """
+        ORDER BY h.ownership_pct DESC NULLS LAST, h.share_amount DESC NULLS LAST;    """
     cur.execute(query, (ticker, year, quarter))
     holders = cur.fetchall()
     cur.close()
