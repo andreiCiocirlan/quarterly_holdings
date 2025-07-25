@@ -5,7 +5,7 @@ var table = $('#filersTable').DataTable({
     order: [[1, 'desc']],  // index 1 is Shares (2nd column)
     columnDefs: [
       { targets: [1], type: 'num-fmt' },   // Use 'num-fmt' for Shares
-      { targets: [2], type: 'num-fmt' }    // Value is currency, also 'num-fmt'
+      { targets: [2], type: 'formatted-num' }    // Value is currency, also 'num-fmt'
     ],
     language: {
       searchPlaceholder: "Filter filers..."
