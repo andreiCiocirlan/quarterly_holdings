@@ -29,7 +29,7 @@ Filers Holding {{ ticker }} – Q{{ quarter }} {{ year }}
   <tr>
     <td>{{ filer_name }}</td>
     <td>{{ "{:,}".format(shares) if shares is not none else '-' }}</td>
-    <td>${{ "{:,.2f}".format(value) if value is not none else '-' }}</td>
+    <td>{{ (value | format_large_number) if value is not none else '-' }}</td>
     <td>{{ "{:.2f}%".format(ownership_pct) if ownership_pct is not none else '-' }}</td>
   </tr>
   {% endfor %}
