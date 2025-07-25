@@ -56,3 +56,9 @@ tr.red-row:hover td {
     background-color: rgb(254, 202, 202) !important;
     cursor: text; /* optional to signal hover */
 }
+
+.top {
+  display: flex;
+  justify-content: flex-start;  /* aligns children to the left */
+  margin-bottom: 10px;          /* add some spacing below */
+}
