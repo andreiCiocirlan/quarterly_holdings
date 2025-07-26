@@ -13,7 +13,7 @@
 {% block content %}
     {% set manager_slug = cik|string + '-' + filer_name|replace('_', '-')|lower %}
     <h1>
-        <a href="{{ url_for('manager', manager_slug=manager_slug) }}">
+        <a href="{{ url_for('main.manager', manager_slug=manager_slug) }}">
             {{ filer_name | replace('_', ' ') }}
         </a>
     </h1>
@@ -29,7 +29,7 @@
                 {% for filing in all_filings %}
                 {% set accession, year, quarter = filing %}
                 {% if accession != accession_nr %}
-                <option value="{{ url_for('compare_holdings', accession_nr=accession_nr, compare_accession_nr=accession) }}">
+                <option value="{{ url_for('main.compare_holdings', accession_nr=accession_nr, compare_accession_nr=accession) }}">
                     Q{{ quarter }} {{ year }}
                 </option>
                 {% endif %}
@@ -66,7 +66,7 @@
                 <tr>
                     <td data-order="{{ h.rank if h.rank is not none else -1 }}">{{ h.rank if h.rank is not none else '-' }}</td>
                     <td>
-                        <a href="{{ url_for('ticker_history', cik=cik, ticker=h.ticker) }}">
+                        <a href="{{ url_for('main.ticker_history', cik=cik, ticker=h.ticker) }}">
                             {{ h.ticker }}
                         </a>
                     </td>

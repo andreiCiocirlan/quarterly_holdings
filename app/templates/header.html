@@ -43,12 +43,12 @@
 <body>
 <header class="container-fluid d-flex align-items-center gap-3 sticky-top" style="padding: 1rem 0 1rem 1rem; border-bottom: 1px solid #ddd; background-color: rgb(55 65 81);">
   <!-- Home button -->
-  <a href="{{ url_for('index') }}" class="btn btn-primary d-flex align-items-center">
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary d-flex align-items-center">
     <i class="bi bi-house-fill me-0"></i>
   </a>
 
   <!-- Search form aligned right after Home button -->
-  <form method="GET" action="{{ url_for('search_filers') }}" class="mb-0" style="position: relative; width: 300px;">
+  <form method="GET" action="{{ url_for('main.search_filers') }}" class="mb-0" style="position: relative; width: 300px;">
     <input
             type="text"
             name="q"

@@ -14,7 +14,7 @@
 
         {% set manager_slug = cik|string + '-' + filer_name|replace('_', '-')|lower %}
         <h1>
-            <a href="{{ url_for('manager', manager_slug=manager_slug) }}">
+            <a href="{{ url_for('main.manager', manager_slug=manager_slug) }}">
                 {{ filer_name | replace('_', ' ') }}
             </a>
         </h1>
@@ -28,7 +28,7 @@
                     <option value="" selected disabled>Select filing to compare</option>
                     {% for accession, year, quarter in all_filings %}
                     {% if accession != filing1.accession_nr and accession != filing2.accession_nr %}
-                    <option value="{{ url_for('compare_holdings', accession_nr=latest_accession_nr, compare_accession_nr=accession) }}">
+                    <option value="{{ url_for('main.compare_holdings', accession_nr=latest_accession_nr, compare_accession_nr=accession) }}">
                         Q{{ quarter }} {{ year }}
                     </option>
                     {% endif %}

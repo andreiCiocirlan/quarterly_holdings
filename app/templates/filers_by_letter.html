@@ -26,7 +26,7 @@
             </td>
             <td>
                 {% if accession_nr %}
-                <a href="{{ url_for('holdings', accession_nr=accession_nr) }}">Q{{ quarter }} {{ year }}</a>
+                <a href="{{ url_for('main.holdings', accession_nr=accession_nr) }}">Q{{ quarter }} {{ year }}</a>
                 {% else %}
                 -
                 {% endif %}

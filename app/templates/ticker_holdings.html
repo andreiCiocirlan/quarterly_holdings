@@ -24,7 +24,7 @@
     {% for row in holdings %}
     <tr>
       <td>
-        <a href="{{ url_for('ticker_quarter_detail', ticker=ticker, year=row[0], quarter=row[1]) }}">
+        <a href="{{ url_for('main.ticker_quarter_detail', ticker=ticker, year=row[0], quarter=row[1]) }}">
           Q{{ row[1] }} {{ row[0] }}
         </a>
       </td>

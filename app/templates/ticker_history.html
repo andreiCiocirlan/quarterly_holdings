@@ -7,7 +7,7 @@ Holdings history for {{ ticker }}
 {% block content %}
   {% set manager_slug = cik|string + '-' + filer_name|replace('_', '-')|lower %}
   <h2>
-    <a href="{{ url_for('manager', manager_slug=manager_slug) }}">
+    <a href="{{ url_for('main.manager', manager_slug=manager_slug) }}">
       {{ filer_name | replace('_', ' ') }}
     </a>
   </h2>
@@ -27,7 +27,7 @@ Holdings history for {{ ticker }}
     {% for entry in history %}
     <tr>
       <td>
-        <a href="{{ url_for('ticker_quarter_detail', ticker=ticker, year=entry.year, quarter=entry.quarter) }}">
+        <a href="{{ url_for('main.ticker_quarter_detail', ticker=ticker, year=entry.year, quarter=entry.quarter) }}">
           Q{{ entry.quarter }} {{ entry.year }}
         </a>
       </td>

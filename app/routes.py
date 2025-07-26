@@ -1,77 +1,16 @@
 import json
-import math
-import os
-import re
 
-import pandas as pd
 import plotly.express as px
-import psycopg
-from flask import Flask, render_template
 from flask import jsonify, request, abort
+from flask import render_template, Blueprint
 from plotly.utils import PlotlyJSONEncoder
 
-app = Flask(__name__)
+from app.utils import get_db_connection, format_large_number
 
-# Database connection parameters (use environment variables or defaults)
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_NAME = os.getenv('DB_NAME', 'filings_db')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
+bp = Blueprint('main', __name__)
 
 
-def get_db_connection():
-    conn = psycopg.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD
-    )
-    return conn
-
-
-def format_large_number(num):
-    if num is None:
-        return '-'
-    try:
-        num = float(num)
-    except (ValueError, TypeError):
-        return str(num)
-
-    trillion = 1_000_000_000_000
-    billion = 1_000_000_000
-    million = 1_000_000
-
-    if num >= trillion:
-        return f"${num / trillion:.2f} T"
-    elif num >= billion:
-        return f"${num / billion:.2f} B"
-    elif num >= million:
-        return f"${num / million:.2f} M"
-    else:
-        return f"${num:,.2f}"
-
-
-@app.template_filter('currency')
-def currency_filter(value):
-    if value is None:
-        return '-'
-    return f"${value:,.2f}"
-
-
-# Helper function to build filer URL slug
-def filer_url(cik, formatted_name):
-    name_slug = formatted_name.replace('_', '-').lower()
-    name_slug = re.sub(r'[^a-z0-9\-]', '', name_slug)
-    return f"/manager/{cik}-{name_slug}"
-
-
-# Register as Jinja2 global
-app.jinja_env.globals.update(filer_url=filer_url)
-app.jinja_env.filters['format_large_number'] = format_large_number
-
-@app.route('/')
+@bp.route('/')
 def index():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -116,8 +55,8 @@ def index():
     # Sort using the raw numeric holdings_value (the last element)
     top5 = sorted(filers, key=lambda x: x[-1], reverse=True)[:10]
     data = {
-        'name': [f[1].replace('_', ' ') for f in top5],      # filer name
-        'holdings': [f[-1] for f in top5]                  # raw numeric holdings_value
+        'name': [f[1].replace('_', ' ') for f in top5],  # filer name
+        'holdings': [f[-1] for f in top5]  # raw numeric holdings_value
     }
 
     fig = px.pie(data, names='name', values='holdings', title="Holdings Value Top 10 Filers")
@@ -129,7 +68,7 @@ def index():
     return render_template('index.html', filers=filers, graphJSON=graphJSON)
 
 
-@app.route('/letter/<letter>')
+@bp.route('/letter/<letter>')
 def filers_by_letter(letter):
     # Sanitize input: uppercase and ensure single letter A-Z
     letter = letter.upper()
@@ -179,7 +118,7 @@ def filers_by_letter(letter):
     return render_template('filers_by_letter.html', filers=filers, letter=letter)
 
 
-@app.route('/manager/<manager_slug>')
+@bp.route('/manager/<manager_slug>')
 def manager(manager_slug):
     import re
     from flask import abort, render_template
@@ -272,7 +211,7 @@ def manager(manager_slug):
                            formatted_name=filer[1],
                            top_20_pct=top_20_pct,
                            chart_labels=labels,
-                           cik_padded = str(cik).zfill(10),
+                           cik_padded=str(cik).zfill(10),
                            chart_values=values,
                            most_recent_accession=most_recent_accession,
                            most_recent_year=most_recent_year,
@@ -280,7 +219,7 @@ def manager(manager_slug):
                            )
 
 
-@app.route('/holdings/<accession_nr>')
+@bp.route('/holdings/<accession_nr>')
 def holdings(accession_nr):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -344,7 +283,7 @@ def holdings(accession_nr):
     )
 
 
-@app.route('/api/search_filers')
+@bp.route('/api/search_filers')
 def search_filers():
     q = request.args.get('q', '').strip()
     if len(q) < 2:
@@ -364,7 +303,7 @@ def search_filers():
         WHERE formatted_name ILIKE %s or cik ILIKE %s
         ORDER BY formatted_name ASC
         LIMIT 10;
-    """, (f'%{search_term}%',f'%{search_term}%'))
+    """, (f'%{search_term}%', f'%{search_term}%'))
     results = cur.fetchall()
     cur.close()
     conn.close()
@@ -374,33 +313,7 @@ def search_filers():
     return jsonify(filers)
 
 
-@app.template_filter()
-def format_percent_or_na(value, decimals=2, times_100=False):
-    try:
-        fval = float(value)
-        if math.isnan(fval):
-            return "N/A"
-        if times_100:
-            fval = fval * 100
-        return f"{fval:,.{decimals}f}%"
-    except (ValueError, TypeError):
-        return "N/A"
-
-
-@app.template_filter()
-def format_number_or_na(value, decimals=2):
-    try:
-        fval = float(value)
-        if math.isnan(fval):
-            return "N/A"
-
-        format_str = f"{{:,.{decimals}f}}".format(fval)
-        return format_str
-    except (ValueError, TypeError):
-        return "N/A"
-
-
-@app.route('/holdings/<accession_nr>/compare/<compare_accession_nr>')
+@bp.route('/holdings/<accession_nr>/compare/<compare_accession_nr>')
 def compare_holdings(accession_nr, compare_accession_nr):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -504,7 +417,8 @@ def compare_holdings(accession_nr, compare_accession_nr):
     comparison.sort(key=lambda x: x['value_new'] if x['value_new'] is not None else 0, reverse=True)
 
     cur = conn.cursor()
-    cur.execute('SELECT accession_nr, year, quarter FROM filings WHERE cik = %s ORDER BY year DESC, quarter DESC', (cik1,))
+    cur.execute('SELECT accession_nr, year, quarter FROM filings WHERE cik = %s ORDER BY year DESC, quarter DESC',
+                (cik1,))
     all_filings = cur.fetchall()
     cur.close()
 
@@ -520,7 +434,7 @@ def compare_holdings(accession_nr, compare_accession_nr):
     )
 
 
-@app.route('/tickers/<string:ticker>/quarterly_holdings')
+@bp.route('/tickers/<string:ticker>/quarterly_holdings')
 def ticker_quarterly_holdings(ticker):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -548,7 +462,7 @@ def ticker_quarterly_holdings(ticker):
     return render_template('ticker_holdings.html', holdings=holdings_data, ticker=ticker.upper())
 
 
-@app.route('/<string:ticker>/<int:year>/<int:quarter>')
+@bp.route('/<string:ticker>/<int:year>/<int:quarter>')
 def ticker_quarter_detail(ticker, year, quarter):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -578,7 +492,7 @@ def ticker_quarter_detail(ticker, year, quarter):
                            holders=holders)
 
 
-@app.route('/filer/<string:cik>/ticker/<string:ticker>/history')
+@bp.route('/filer/<string:cik>/ticker/<string:ticker>/history')
 def ticker_history(cik, ticker):
     ticker = ticker.upper()
     conn = get_db_connection()
@@ -627,8 +541,3 @@ def ticker_history(cik, ticker):
                            filer_name=filer_name,
                            cik=cik,
                            history=history)
-
-
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -39,7 +39,7 @@ Filers Holding {{ ticker }} – Q{{ quarter }} {{ year }}
 <p>No filers found holding {{ ticker }} in Q{{ quarter }} {{ year }}.</p>
 {% endif %}
 
-<a href="{{ url_for('ticker_quarterly_holdings', ticker=ticker) }}" class="btn btn-secondary mt-3">
+<a href="{{ url_for('main.ticker_quarterly_holdings', ticker=ticker) }}" class="btn btn-secondary mt-3">
   Back to Quarterly Holdings Summary
 </a>
 
