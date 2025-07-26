@@ -41,8 +41,8 @@ services:
       DB_PASSWORD: postgres
     volumes:
       - .:/app
-    working_dir: /app/src
-    command: python web/app.py
+    working_dir: /app
+    command: python -m app.run
     ports:
       - "5000:5000"
 
