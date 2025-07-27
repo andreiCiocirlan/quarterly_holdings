@@ -10,3 +10,6 @@
 # 4. Now the app starts normally if the database is populated, otherwise inserts data.
 
 
+# Ports:
+Inside Docker python-app        : postgres  : 5434
+Outside Docker (host machine)   : localhost : 5432
