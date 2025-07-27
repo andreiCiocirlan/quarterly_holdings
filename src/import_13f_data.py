@@ -16,13 +16,11 @@ DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
 
 def create_db_connection():
     # Replace with your actual connection parameters
-    return psycopg.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD
-    )
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+    if not DATABASE_URL:
+        # Local fallback (e.g. your local dev machine)
+        DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    return psycopg.connect(DATABASE_URL)
 
 
 def create_holdings_table(conn):
