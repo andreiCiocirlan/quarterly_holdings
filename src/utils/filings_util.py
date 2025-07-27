@@ -1,4 +1,5 @@
 import glob
+import math
 import os
 import re
 from pathlib import Path
@@ -13,6 +14,71 @@ from utils.date_util import get_year_and_quarter
 from utils.file_util import extract_filername_year_quarter_accession, extract_year_quarter_from_filename
 from utils.mappings import BASE_DIR_FINAL, STOCKS_SHS_Q_END_PRICES_FILE, CIK_TO_PARSED_13F_DIR, \
     CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER, HEADERS
+
+
+def is_reported_in_thousands(row):
+    share_amount = row['share_amount']
+    reported = row['share_value']
+    price = row['quarter_end_price']
+
+    # Check if price is valid (not NaN)
+    if pd.isna(price):
+        return False  # or handle as you prefer
+
+    correct = share_amount * price
+    if correct < 1000 or correct == 0:
+        return False
+
+    # Round up to nearest thousand
+    correct_rounded = math.ceil(correct / 1000) * 1000
+
+    ratio = reported / correct_rounded
+    return abs(ratio - 0.001) < 1e-2
+
+
+def correct_share_values_thousands(year : str, quarter : str):
+    for root, dirs, files in os.walk(os.path.join(BASE_DIR_FINAL, year, quarter)):
+        for file in files:
+            if file.endswith('.csv'):
+                correct_share_values_for_csv(file, root)
+
+
+def correct_share_values_for_csv(file, root):
+    csv_path = os.path.join(root, file)
+    try:
+        df = pd.read_csv(csv_path)
+        df = _correct_share_values_reported_in_thousands(df, csv_path)  # fix values reported in thousands
+        df['share_value'] = df['share_value'].fillna(0)
+        df['rank'] = df['share_value'].rank(method='first', ascending=False).astype(int)
+        df = df.sort_values('rank')
+        df.to_csv(csv_path, index=False)
+    except Exception as e:
+        print(f"Error processing {csv_path}: {e}")
+
+
+def _correct_share_values_reported_in_thousands(df, csv_path):
+    # Ensure share_value is float to avoid dtype issues on multiplication
+    if not pd.api.types.is_float_dtype(df['share_value']):
+        df['share_value'] = df['share_value'].astype('float64')
+
+    def compute_corrected_value(row):
+        share_amount = row['share_amount']
+        price = row['quarter_end_price']
+        # Calculate the correct value first
+        correct = share_amount * price
+        # Round up to nearest thousand
+        corrected = math.ceil(correct / 1000) * 1000
+        return corrected
+
+    # Identify rows reported in thousands
+    mask_in_thousands = df.apply(is_reported_in_thousands, axis=1)
+
+    # Multiply share_value by 1000 for those rows
+    if mask_in_thousands.any():
+        print(f"Correcting {mask_in_thousands.sum()} rows in file {csv_path} reported in thousands.")
+        df.loc[mask_in_thousands, 'share_value'] = df.loc[mask_in_thousands].apply(compute_corrected_value, axis=1)
+
+    return df
 
 
 def check_latest_13f(ciks, page_count=5):
