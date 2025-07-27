@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   postgres:
-    image: postgres:12.3-alpine
+    image: postgres:latest
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -12,9 +10,10 @@ services:
       - "5434:5432"  # Map container 5432 to host 5433 to avoid conflict if you run other DBs
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
 
   pgadmin:
-    image: dpage/pgadmin4:6.20
+    image: dpage/pgadmin4:latest
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
