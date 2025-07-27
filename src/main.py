@@ -48,6 +48,11 @@ def main():
     # generate_13f_and_add_chg_ownership_for_ciks(found_ciks)
 
 
+    # STEP 7 : correct files that report in thousands
+    # correct_share_values_thousands('2024', 'Q2')
+    # correct_share_values_thousands('2024', 'Q3')
+    # correct_share_values_thousands('2024', 'Q4')
+    # correct_share_values_thousands('2025', 'Q1')
 
 if __name__ == "__main__":
     main()
