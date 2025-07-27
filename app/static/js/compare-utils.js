@@ -59,6 +59,8 @@ $(document).ready(function() {
     }
   });
   new $.fn.dataTable.FixedHeader(table);
+  $('#loadingIndicator').hide();
+  $('#comparisonTableContainer').show();
 });
 
 // Custom sorting for percentage columns with NEW and REMOVED
