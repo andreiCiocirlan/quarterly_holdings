@@ -16,6 +16,7 @@ def get_db_connection():
     if not DATABASE_URL:
         # Local fallback (e.g. your local dev machine)
         DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    print(DATABASE_URL)
     return psycopg.connect(DATABASE_URL)
 
 
