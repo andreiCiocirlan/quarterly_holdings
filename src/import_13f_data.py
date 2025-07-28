@@ -1,26 +1,9 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-import psycopg  # psycopg v3
-
+from app.db import get_db_connection
 from utils.file_util import extract_filername_year_quarter_accession
 from utils.mappings import *
-
-# Database connection parameters (use environment variables or defaults)
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5434')
-DB_NAME = os.getenv('DB_NAME', 'filings_db')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
-
-
-def create_db_connection():
-    # Replace with your actual connection parameters
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    if not DATABASE_URL:
-        # Local fallback (e.g. your local dev machine)
-        DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    return psycopg.connect(DATABASE_URL)
 
 
 def create_holdings_table(conn):
@@ -418,7 +401,7 @@ def update_ownership_pct_holdings_and_stocks(conn, tickers=None, shs_outstanding
 
 
 def process_single_csv(csv_file):
-    conn = create_db_connection()
+    conn = get_db_connection()
     filename = csv_file.name
     try:
         filername, year, quarter, accession_nr = extract_filername_year_quarter_accession(filename)
@@ -481,7 +464,7 @@ def main():
     df = pd.read_csv(ALL_FILERS_CSV)
 
     # Connect to DB
-    conn = create_db_connection()
+    conn = get_db_connection()
     conn.autocommit = False  # Explicit transaction control
 
     try:
