@@ -12,6 +12,8 @@
 # 3. rename dump.sql to data.sql and move it inside docker-entrypoint-initdb.d
 # 4. Now the app starts normally if the database is populated, otherwise inserts data.
 
+# 5. if above 1GB in heroku run the following from heroku pg:psql -a quarterly-holdings:
+    DELETE FROM filings WHERE cik IN ( SELECT cik FROM ( SELECT cik, ROW_NUMBER() OVER (ORDER BY holdings_value ASC) AS rn  FROM filings WHERE year = 2025 AND quarter = 1 ) as ranked_ciks  WHERE rn <= 100);
 
 # Ports:
 Inside Docker python-app        : postgres  : 5434
