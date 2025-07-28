@@ -5,7 +5,8 @@ from flask import jsonify, request, abort
 from flask import render_template, Blueprint
 from plotly.utils import PlotlyJSONEncoder
 
-from app.utils import get_db_connection, format_large_number
+from app.db import get_db_connection
+from app.utils import format_large_number
 
 bp = Blueprint('main', __name__)
 
