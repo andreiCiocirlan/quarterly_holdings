@@ -55,18 +55,31 @@ def index():
 
     # Sort using the raw numeric holdings_value (the last element)
     top10 = sorted(filers, key=lambda x: x[-1], reverse=True)[:10]
-    data = {
-        'name': [f[1].replace('_', ' ') for f in top10],  # filer name
-        'holdings': [f[-1] for f in top10]  # raw numeric holdings_value
+
+    data_top10 = {
+        'name': [f[1].replace('_', ' ') for f in top10],
+        'holdings': [f[-1] for f in top10]
     }
+    fig_top10 = px.pie(data_top10, names='name', values='holdings', title="Holdings Value Top 10 Filers")
+    fig_top10.update_traces(hovertemplate='%{label}: %{value:,.0f}<extra></extra>')
 
-    fig = px.pie(data, names='name', values='holdings', title="Holdings Value Top 10 Filers")
-    fig.update_traces(
-        hovertemplate='%{label}: %{value:,.0f}<extra></extra>'
-    )
-    graphJSON = json.dumps(fig, cls=PlotlyJSONEncoder)
+    # Calculate total holdings of all filers
+    total_holdings = sum(f[-1] for f in filers)
+    top10_holdings = sum(data_top10['holdings'])
 
-    return render_template('index.html', filers=filers, graphJSON=graphJSON)
+    # Data for comparison: top 10 vs others
+    data_comparison = {
+        'name': ['Top 10 Filers', 'Others'],
+        'holdings': [top10_holdings, total_holdings - top10_holdings]
+    }
+    fig_comparison = px.pie(data_comparison, names='name', values='holdings', title="Top 10 Filers vs Others")
+    fig_comparison.update_traces(hovertemplate='%{label}: %{value:,.0f}<extra></extra>')
+
+    # Convert figures to JSON
+    graphJSON_top10 = json.dumps(fig_top10, cls=PlotlyJSONEncoder)
+    graphJSON_comparison = json.dumps(fig_comparison, cls=PlotlyJSONEncoder)
+
+    return render_template('index.html', filers=filers, graphJSON_top10=graphJSON_top10, graphJSON_comparison=graphJSON_comparison)
 
 
 @bp.route('/letter/<letter>')
