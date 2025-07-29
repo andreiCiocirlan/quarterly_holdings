@@ -50,9 +50,13 @@
     <script src="{{ url_for('static', filename='js/index-utils.js') }}"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
+        var config = {
+            displaylogo: false,  // This removes the Plotly logo from the modebar
+            modeBarButtonsToRemove: ['toImage', 'resetScale2d']
+        };
         var plotly_data = {{ graphJSON_top10 | safe }};
         var plotly_comparison_data = {{ graphJSON_comparison | safe }};
-        Plotly.newPlot('holdings-pie-chart', plotly_data.data, plotly_data.layout);
-        Plotly.newPlot('comparison-pie-chart', plotly_comparison_data.data, plotly_comparison_data.layout);
+        Plotly.newPlot('holdings-pie-chart', plotly_data.data, plotly_data.layout, config);
+        Plotly.newPlot('comparison-pie-chart', plotly_comparison_data.data, plotly_comparison_data.layout, config);
     </script>
 {% endblock %}
