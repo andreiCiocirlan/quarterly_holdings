@@ -11,9 +11,13 @@
                     <div class="row mb-2">
                         <div class="col-6 fw-bold">Most recent 13F</div>
                         <div class="col-6">
+                            {% if most_recent_accession %}
                             <a href="{{ url_for('main.holdings', accession_nr=most_recent_accession) }}">
                                 Q{{ most_recent_quarter }} {{ most_recent_year }}
                             </a>
+                            {% else %}
+                            <span>No recent filing available</span>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="row mb-2">
