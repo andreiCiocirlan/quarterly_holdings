@@ -54,10 +54,10 @@ def index():
         filers.append(tuple(filer_list + [raw_value or 0]))
 
     # Sort using the raw numeric holdings_value (the last element)
-    top5 = sorted(filers, key=lambda x: x[-1], reverse=True)[:10]
+    top10 = sorted(filers, key=lambda x: x[-1], reverse=True)[:10]
     data = {
-        'name': [f[1].replace('_', ' ') for f in top5],  # filer name
-        'holdings': [f[-1] for f in top5]  # raw numeric holdings_value
+        'name': [f[1].replace('_', ' ') for f in top10],  # filer name
+        'holdings': [f[-1] for f in top10]  # raw numeric holdings_value
     }
 
     fig = px.pie(data, names='name', values='holdings', title="Holdings Value Top 10 Filers")
