@@ -128,15 +128,10 @@ def manager(manager_slug):
     if not match:
         abort(404)
     cik = match.group(1)
+    formatted_name = match.group(2)
 
     conn = get_db_connection()
     cur = conn.cursor()
-
-    # Fetch filer info
-    cur.execute('SELECT cik, formatted_name FROM filers WHERE cik = %s', (cik,))
-    filer = cur.fetchone()
-    if not filer:
-        abort(404)
 
     # Fetch filings
     cur.execute('''
@@ -209,7 +204,7 @@ def manager(manager_slug):
     return render_template('manager.html',
                            filings=filings_with_pct,
                            cik=cik,
-                           formatted_name=filer[1],
+                           formatted_name=formatted_name,
                            top_20_pct=top_20_pct,
                            chart_labels=labels,
                            cik_padded=str(cik).zfill(10),
