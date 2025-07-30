@@ -11,8 +11,9 @@ from lxml import etree
 from cfg.cfg_requests import limited_get
 from init_setup.ticker_cusip_data import ticker_to_cik, cik_to_ticker
 from utils.date_util import get_year_and_quarter
+from utils.filings_util import get_prev_quarter
 from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR, HEADERS
-from utils.ticker_util import get_prices_for_all_quarters
+from utils.ticker_util import get_prices_for_all_quarters, has_q_end_price
 
 STANDARD_MEMBERS = {'CommonStockMember', 'CommonClassAMember'}
 EXCLUDED_MEMBERS = {'CommonClassBMember'}
@@ -489,6 +490,82 @@ def add_quarter_end_price_to_sh_outstanding_file(year_quarter_list=None):
     df.to_csv(STOCKS_SHS_Q_END_PRICES_FILE, index=False)
 
     print(f"Updated CSV saved to {STOCKS_SHS_Q_END_PRICES_FILE}.")
+
+
+def get_latest_10q_reports(submission_json_path, latest_n=1, form_type="10-Q", expected_year=None,
+                           expected_quarter=None):
+    """
+    Reads the submission.json file, finds the latest n 10-Q filings by acceptanceDateTime,
+    and returns list of tuples: (acceptance_datetime, report_date, year, quarter)
+    """
+    if form_type:
+        form_type_allowed = form_type
+    else:
+        form_type_allowed = "10-Q"
+    with open(submission_json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    filings = data.get('filings', {}).get('recent', {})
+    forms = filings.get('form', [])
+    report_dates = filings.get('reportDate', [])
+    acceptance_dates = filings.get('acceptanceDateTime', [])
+
+    # Collect only 10-Q filings with their indexed data
+    ten_q_filings = []
+    for i, form in enumerate(forms):
+        if form == form_type_allowed:
+            acceptance_dt = datetime.strptime(acceptance_dates[i], "%Y-%m-%dT%H:%M:%S.%fZ")
+            report_date = report_dates[i]
+            year, quarter = get_year_and_quarter(report_date)
+            if expected_year is not None and expected_quarter is not None:
+                if year == expected_year and quarter == expected_quarter:
+                    ten_q_filings.append({
+                        'acceptance_datetime': acceptance_dt,
+                        'report_date': report_date,
+                        'year': year,
+                        'quarter': quarter
+                    })
+
+    # Sort filings by acceptance_datetime descending, pick latest n
+    ten_q_filings.sort(key=lambda x: x['acceptance_datetime'], reverse=True)
+    latest_filings = ten_q_filings[:latest_n]
+
+    # Return in preferred format:
+    return latest_filings
+
+
+def update_multiple_years_quarters(year_quarter_list=None):
+    if not year_quarter_list:
+        year_quarter_list = [['2025', 'Q2']]
+
+    for year, quarter in year_quarter_list:
+        update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
+
+
+def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None):
+    if not year:
+        year = '2025'
+    if not quarter:
+        quarter = 'Q2'
+
+    df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
+    for cik, ticker in cik_to_ticker.items():
+        filename = f'CIK{str(int(cik)).zfill(10)}.json'
+        path = os.path.join(SUBMISSIONS_STOCKS_DIR, filename)
+        result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter)
+        if result:
+            prev_year, prev_quarter = get_prev_quarter(year, int(quarter.lstrip("Q")))
+            prev_quarter = f"Q{prev_quarter}"
+
+            if not has_q_end_price(ticker, year, quarter) and has_q_end_price(ticker, prev_year, prev_quarter):
+                print(f'importing {year}, {quarter} for {ticker} shares outstanding')
+                df = shs_outstanding_for_ticker(ticker, df=df, lookback=1)
+
+
+    df['outstanding_shares'] = pd.to_numeric(df['outstanding_shares'], errors='coerce').astype('Int64')
+    df.to_csv(STOCKS_SHS_Q_END_PRICES_FILE, index=False)
+
+    add_quarter_end_price_to_sh_outstanding_file(year_quarter_list=[ [year, quarter]])
 
 
 def main():
