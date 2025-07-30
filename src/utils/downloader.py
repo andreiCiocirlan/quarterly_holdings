@@ -219,7 +219,7 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
             print(f"Saved {report_date} {form_type} file: {file_path}")
 
 
-def latest_filings_download(prev_found_ciks=None):
+def latest_filings_download(prev_found_ciks=None, include_quarters_years=None):
     if prev_found_ciks is None:
         prev_found_ciks = ['1568540', '1535847', '1604488', '1443095', '2001015', '1599900', '1783464', '1998033', '1977602', '1731444', '1632407', '1709632', '1764387', '1080369', '1632097', '2023325', '1475940', '1054554', '1858789', '1665097', '1353651', '881432', '1415201', '1107314', '1719305', '1767306', '1911876', '1927543', '1027796', '1032814', '1786379', '1308685', '821197', '1890906', '1899030', '1539994', '1698218', '1612865', '1007295', '1294571', '1818604', '1455258', '2056425', '1563525', '1686444', '1056053', '1694080', '1140771', '1015247', '33250', '1254890', '1164478', '1737112', '1388409', '1277403', '1163902', '1633389', '2046751', '1929170', '1005354', '1350585', '1774879', '2012816', '810121', '1082215', '1875645', '1056825', '1929986', '1079935', '1963326', '1908765', '757657', '1735445', '1535588', '1592413', '1093589', '1911056', '732905', '1966898', '878228', '1633387', '1044905', '1591505', '900974', '1085163', '1707206', '922127', '1966007', '1529090', '1395055', '1218210', '1535293', '1965334', '1534866', '1278678', '1621915', '1352864', '1433541', '2004904', '1426771', '1281761', '1462020', '1061186', '1535323', '1644956', '1707202', '314969', '1673385', '1766150']
 
@@ -227,7 +227,9 @@ def latest_filings_download(prev_found_ciks=None):
     difference = list(set(found_ciks) - set(prev_found_ciks))
     print(f"Importing 13F-HR data for ciks: {difference}")
 
-    include_quarters_years = ['Q3 2025', 'Q2 2025', 'Q1 2025', 'Q4 2024']
+    if include_quarters_years is None:
+        include_quarters_years = ['Q3 2025', 'Q2 2025', 'Q1 2025', 'Q4 2024']
+
     for cik in difference:
         latest_metadata = latest_filing_metadata(cik, latest_n_filings=2,
                                                  include_quarters_years=include_quarters_years, use_requests=True)
