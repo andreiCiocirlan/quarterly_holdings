@@ -535,7 +535,7 @@ def get_latest_10q_reports(submission_json_path, latest_n=1, form_type="10-Q", e
 
 
 def update_multiple_years_quarters(year_quarter_list=None):
-    if not year_quarter_list:
+    if year_quarter_list is None:
         year_quarter_list = [['2025', 'Q2']]
 
     for year, quarter in year_quarter_list:
@@ -543,9 +543,9 @@ def update_multiple_years_quarters(year_quarter_list=None):
 
 
 def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None):
-    if not year:
+    if year is None:
         year = '2025'
-    if not quarter:
+    if quarter is None:
         quarter = 'Q2'
 
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
