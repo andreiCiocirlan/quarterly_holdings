@@ -156,8 +156,6 @@ def check_latest_13f(ciks, page_count=5):
             if cik_norm in normalized_ciks and form_type in ['13F-HR', '13F-HR/A']:
                 found_ciks.append(cik_norm)
 
-    print(f"Found recent filings for ciks: {found_ciks}")
-
     return found_ciks
 
 
