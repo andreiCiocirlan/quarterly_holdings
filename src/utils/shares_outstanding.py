@@ -566,6 +566,13 @@ def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None):
     df.to_csv(STOCKS_SHS_Q_END_PRICES_FILE, index=False)
 
     add_quarter_end_price_to_sh_outstanding_file(year_quarter_list=[ [year, quarter]])
+    check_duplicate_rows_shs_file(df)
+
+
+def check_duplicate_rows_shs_file(shares_df):
+    duplicates = shares_df[shares_df.duplicated(subset=['ticker', 'year', 'quarter'], keep=False)]
+    print("These rows are duplicated based on ticker, year, and quarter:")
+    print(duplicates)
 
 
 def main():
