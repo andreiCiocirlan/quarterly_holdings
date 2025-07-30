@@ -227,7 +227,7 @@ def latest_filings_download(prev_found_ciks=None, include_quarters_years=None):
         prev_found_ciks_set = set(prev_found_ciks)
 
     found_ciks = check_latest_13f(CIK_TO_FINAL_DIR.keys())
-    difference = list(set(found_ciks) - set(prev_found_ciks_set))
+    difference = list(set(found_ciks) - prev_found_ciks_set)
     print(f"Importing 13F-HR data for ciks: {difference}")
 
     if include_quarters_years is None:
