@@ -372,7 +372,7 @@ def find_htm_xml_link(filing_index_url):
     return htm_xml_link
 
 
-def shs_outstanding_for_ticker(ticker, df, lookback=4, year_quarter=None, xml_urls=None):
+def shs_outstanding_for_ticker(ticker, df, lookback=4, year_quarter=None, xml_urls=None, form_type=None):
     cik = ticker_to_cik.get(ticker)
     lookback_years = lookback // 4
 
@@ -380,13 +380,17 @@ def shs_outstanding_for_ticker(ticker, df, lookback=4, year_quarter=None, xml_ur
         urls_to_process = xml_urls
     else:
         # Fetch 10-K filings for last n years
-        if lookback_years > 0:
+        if lookback_years > 0 or form_type is not None:
             ten_k_urls = get_latest_10qk_urls(cik, lookback=lookback_years, form_type="10-K")
         else:
             ten_k_urls = []
 
-        # Fetch 10-Q filings for last n quarters
-        ten_q_urls = get_latest_10qk_urls(cik, lookback=lookback, form_type="10-Q")
+        if form_type != '10-K':
+            # Fetch 10-Q filings for last n quarters
+            ten_q_urls = get_latest_10qk_urls(cik, lookback=lookback, form_type="10-Q")
+        else:
+            ten_q_urls = []
+
 
         if not ten_q_urls and not ten_k_urls:
             return df
@@ -542,24 +546,26 @@ def update_multiple_years_quarters(year_quarter_list=None):
         update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
 
 
-def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None):
+def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None, form_type=None):
     if year is None:
         year = '2025'
     if quarter is None:
         quarter = 'Q2'
+    if form_type is None:
+        form_type = '10-Q'
 
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
     for cik, ticker in cik_to_ticker.items():
         filename = f'CIK{str(int(cik)).zfill(10)}.json'
         path = os.path.join(SUBMISSIONS_STOCKS_DIR, filename)
-        result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter)
+        result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter, form_type=form_type)
         if result:
             prev_year, prev_quarter = get_prev_quarter(year, int(quarter.lstrip("Q")))
             prev_quarter = f"Q{prev_quarter}"
 
             if not has_q_end_price(ticker, year, quarter) and has_q_end_price(ticker, prev_year, prev_quarter):
                 print(f'importing {year}, {quarter} for {ticker} shares outstanding')
-                df = shs_outstanding_for_ticker(ticker, df=df, lookback=1)
+                df = shs_outstanding_for_ticker(ticker, df=df, lookback=1, form_type=form_type)
 
 
     df['outstanding_shares'] = pd.to_numeric(df['outstanding_shares'], errors='coerce').astype('Int64')
