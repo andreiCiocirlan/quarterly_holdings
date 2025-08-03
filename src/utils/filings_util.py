@@ -36,10 +36,14 @@ def is_reported_in_thousands(row):
     return abs(ratio - 0.001) < 1e-2
 
 
-def correct_share_values_thousands(year : str, quarter : str):
+def correct_share_values_thousands(year : str, quarter : str, filers=None):
+    filers_set = set(filers) if filers is not None else None
     for root, dirs, files in os.walk(os.path.join(BASE_DIR_FINAL, year, quarter)):
         for file in files:
             if file.endswith('.csv'):
+                if filers_set:
+                    if not any(file.startswith(filer) for filer in filers_set):
+                        continue
                 correct_share_values_for_csv(file, root)
 
 
