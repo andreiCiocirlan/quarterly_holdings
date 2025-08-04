@@ -380,7 +380,7 @@ def shs_outstanding_for_ticker(ticker, df, lookback=4, year_quarter=None, xml_ur
         urls_to_process = xml_urls
     else:
         # Fetch 10-K filings for last n years
-        if lookback_years > 0 or form_type is not None:
+        if lookback_years > 0 or form_type == '10-K':
             ten_k_urls = get_latest_10qk_urls(cik, lookback=lookback_years, form_type="10-K")
         else:
             ten_k_urls = []
@@ -565,7 +565,7 @@ def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None, form
 
             if not has_q_end_price(ticker, year, quarter) and has_q_end_price(ticker, prev_year, prev_quarter):
                 print(f'importing {year}, {quarter} for {ticker} shares outstanding')
-                df = shs_outstanding_for_ticker(ticker, df=df, lookback=1, form_type=form_type)
+                df = shs_outstanding_for_ticker(ticker, df=df, year_quarter=f"{year}_{quarter}", lookback=1, form_type=form_type)
 
 
     df['outstanding_shares'] = pd.to_numeric(df['outstanding_shares'], errors='coerce').astype('Int64')
