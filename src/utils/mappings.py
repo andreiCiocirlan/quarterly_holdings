@@ -84,6 +84,22 @@ def _build_ticker_year_quarter_dict_for(column):
     return result_dict
 
 
+def _build_cik_accession_filing_date_dict():
+    # Read only necessary columns
+    usecols = ['cik', 'accession_nr', 'filing_date']
+    df = pd.read_csv(FILER_ACCESSION_METADATA, usecols=usecols, dtype={'cik': str, 'accession_nr': str})
+
+    # Normalize filing_date: treat empty strings or NaN as None
+    df['filing_date'] = df['filing_date'].replace("", pd.NA)
+    df['filing_date'] = df['filing_date'].where(pd.notnull(df['filing_date']), None)
+
+    result_dict = {
+        (row['cik'], row['accession_nr']): row['filing_date']
+        for _, row in df.iterrows()
+    }
+    return result_dict
+
+
 def _initialize_mappings():
     cik_to_filer_and_aum = load_cik_to_filer_and_aum(ALL_FILERS_CSV)
 
@@ -106,6 +122,7 @@ def _initialize_mappings():
 
     quarter_end_price_dict = _build_ticker_year_quarter_dict_for('quarter_end_price')
     outstanding_shares_dict = _build_ticker_year_quarter_dict_for('outstanding_shares')
+    cik_accession_to_filing_date = _build_cik_accession_filing_date_dict()
 
     cik_to_accessions = _build_cik_to_accession()
 
@@ -129,7 +146,8 @@ def _initialize_mappings():
 
         "QUARTER_END_PRICE_DICT": quarter_end_price_dict,
         "OUTSTANDING_SHARES_DICT": outstanding_shares_dict,
-        "CIK_TO_ACCESSIONS": cik_to_accessions
+        "CIK_TO_ACCESSIONS": cik_to_accessions,
+        "CIK_ACCESSION_TO_FILING_DATE": cik_accession_to_filing_date
 
     }
 
@@ -157,6 +175,7 @@ CIK_TO_FILER_OVER_250B = _mappings["CIK_TO_FILER_OVER_250B"]
 QUARTER_END_PRICE_DICT = _mappings["QUARTER_END_PRICE_DICT"]
 OUTSTANDING_SHARES_DICT = _mappings["OUTSTANDING_SHARES_DICT"]
 CIK_TO_ACCESSIONS = _mappings["CIK_TO_ACCESSIONS"]
+CIK_ACCESSION_TO_FILING_DATE = _mappings["CIK_ACCESSION_TO_FILING_DATE"]
 FILERNAME_TO_CIK = {v[0]: k for k, v in CIK_TO_FILER_AND_AUM.items()}
 
 FILER_NAMES = tuple(formatted_name for formatted_name, _ in CIK_TO_FILER_AND_AUM.values())
