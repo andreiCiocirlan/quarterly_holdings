@@ -148,7 +148,7 @@ def manager(manager_slug):
 
     # Fetch filings
     cur.execute('''
-        SELECT accession_nr, year, quarter, form_type, holdings_count, holdings_value
+        SELECT accession_nr, year, quarter, form_type, holdings_count, holdings_value, filing_date
         FROM filings
         WHERE cik = %s
         ORDER BY year DESC, quarter DESC;
@@ -160,7 +160,7 @@ def manager(manager_slug):
     top_20_pct = 0
     for filing in filings:
         accession_nr = filing[0]
-
+        filing_date_raw = filing[6]
         # Fetch holdings for this filing
         cur.execute('''
             SELECT share_value
@@ -218,7 +218,6 @@ def manager(manager_slug):
                            filings=filings_with_pct,
                            cik=cik,
                            formatted_name=formatted_name,
-                           top_20_pct=top_20_pct,
                            chart_labels=labels,
                            cik_padded=str(cik).zfill(10),
                            chart_values=values,

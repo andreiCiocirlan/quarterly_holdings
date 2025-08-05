@@ -54,6 +54,7 @@
             <th>Holdings</th>
             <th>Value ($)</th>
             <th>Form Type</th>
+            <th>Filing Date</th>
             <th>Filing ID</th>
         </tr>
         </thead>
@@ -61,10 +62,11 @@
         {% for filing in filings %}
         <tr>
             <td><a href="{{ url_for('main.holdings', accession_nr=filing[0]) }}">Q{{ filing[2] }} {{ filing[1] }}</a></td>
-            <td>{{ "%.2f"|format(filing[6] if filing|length > 6 else 0) }}%</td>
+            <td>{{ "%.2f"|format(filing[7] if filing|length > 7 else 0) }}%</td>
             <td>{{ filing[4] or '-' }}</td>
             <td>{{ filing[5] }}</td>
             <td>{{ filing[3] or '-' }}</td>
+            <td>{{ filing[6] }}</td>
             <td>{{ filing[0] }}</td>
         </tr>
         {% endfor %}
