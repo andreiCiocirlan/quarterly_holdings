@@ -13,7 +13,8 @@ from init_setup.ticker_cusip_data import cusip_to_ticker, cusip_set
 from utils.date_util import get_year_and_quarter
 from utils.file_util import extract_filername_year_quarter_accession, extract_year_quarter_from_filename
 from utils.mappings import BASE_DIR_FINAL, STOCKS_SHS_Q_END_PRICES_FILE, CIK_TO_PARSED_13F_DIR, \
-    CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER, HEADERS
+    CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER, HEADERS, \
+    RAW_PARSED_HOLDINGS_DIRECTORIES, FILER_ACCESSION_METADATA
 
 
 def is_reported_in_thousands(row):
@@ -34,6 +35,22 @@ def is_reported_in_thousands(row):
 
     ratio = reported / correct_rounded
     return abs(ratio - 0.001) < 1e-2
+
+
+def create_filer_accession_metadata_file():
+    metadata = []
+    for base_dir in RAW_PARSED_HOLDINGS_DIRECTORIES:
+        if os.path.exists(base_dir):
+            for cik_folder in os.listdir(base_dir):
+                cik_path = os.path.join(base_dir, cik_folder)
+                if os.path.isdir(cik_path):
+                    for file in os.listdir(cik_path):
+                        if file.endswith(".csv"):
+                            accession_nr = os.path.splitext(file)[0]
+                            metadata.append({"cik": cik_folder, "accession_nr": accession_nr})
+
+    metadata_df = pd.DataFrame(metadata)
+    metadata_df.to_csv(FILER_ACCESSION_METADATA, index=False)
 
 
 def correct_share_values_thousands(year : str, quarter : str, filers=None):
