@@ -37,7 +37,8 @@ def create_filings_table(conn):
             holdings_value NUMERIC(20, 2) DEFAULT 0.00,
             year INT NOT NULL,
             quarter INT NOT NULL,
-            form_type VARCHAR(10)
+            form_type VARCHAR(10),
+            filing_date DATE NULL
         );
     """
     with conn.cursor() as cur:
@@ -248,12 +249,12 @@ def update_inst_ownership(conn):
     print("Updated inst_ownership in stocks table.")
 
 
-def insert_filing(cur, cik, accession_nr, year, quarter, form_type='13F-HR'):
+def insert_filing(cur, cik, accession_nr, year, quarter, form_type='13F-HR', filing_date=None):
     cur.execute("""
-        INSERT INTO filings (accession_nr, cik, year, quarter, form_type)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO filings (accession_nr, cik, year, quarter, form_type, filing_date)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (accession_nr) DO NOTHING;
-    """, (accession_nr, cik, year, quarter, form_type))
+    """, (accession_nr, cik, year, quarter, form_type, filing_date))
 
 
 def insert_holdings(cur, accession_nr, df):
@@ -299,10 +300,11 @@ def insert_holdings(cur, accession_nr, df):
 
 def import_quarterly_file(db_conn, cik, accession_nr, year, quarter, csv_path):
     df = pd.read_csv(csv_path)
+    filing_date = CIK_ACCESSION_TO_FILING_DATE.get((str(cik), accession_nr), None)
 
     try:
         with db_conn.cursor() as cur:
-            insert_filing(cur, cik, accession_nr, year, quarter)
+            insert_filing(cur, cik, accession_nr, year, quarter, form_type="13F-HR", filing_date=filing_date)
             insert_holdings(cur, accession_nr, df)
         db_conn.commit()
     except Exception as e:
