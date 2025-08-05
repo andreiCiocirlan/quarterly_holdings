@@ -1,4 +1,4 @@
-from utils.filings_util import generate_13f_and_add_chg_ownership_for_ciks
+from utils.filings_util import generate_13f_and_add_extra_cols
 from utils.mappings import CIK_TO_FILER_OVER_250B
 
 

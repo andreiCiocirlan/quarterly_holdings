@@ -355,15 +355,15 @@ def delete_stale_13f_raw(cik, report_date):
                     print(f"Warning: Could not read {existing_path} due to {e}. Skipping deletion.")
 
 
-def generate_13f_and_add_chg_ownership_for_ciks(ciks: set[str] | list[str]):
+def generate_13f_and_add_extra_cols(ciks: set[str] | list[str]):
     filtered_cik_to_filer = {cik: name for cik, name in CIK_TO_FILER.items() if cik in ciks}
     if filtered_cik_to_filer:
-        _generate_13f_and_add_change_ownership_column(filtered_cik_to_filer)
+        _generate_13f_and_add_extra_cols(filtered_cik_to_filer)
     else:
         print("No matching CIKs found in this batch.")
 
 
-def _generate_13f_and_add_change_ownership_column(cik_to_filer: dict[str, str], tickers=None):
+def _generate_13f_and_add_extra_cols(cik_to_filer: dict[str, str], tickers=None):
     _generate_13f_csv(cik_to_filer)
     add_change_ownership_columns(cik_to_filer, tickers)
     add_quarter_end_price(cik_to_filer)
