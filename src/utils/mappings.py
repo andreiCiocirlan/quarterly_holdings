@@ -18,6 +18,7 @@ ALL_OWNERSHIP_2025_Q1_CSV = os.path.join(DATA_EXTERNAL_DIR, 'all_ownership_2025_
 TOP_100_ADDED_TICKERS_CSV = os.path.join(DATA_EXTERNAL_DIR, "top_100_added.csv")
 TOP_100_REDUCED_TICKERS_CSV = os.path.join(DATA_EXTERNAL_DIR, "top_100_reduced.csv")
 OVER_100_OWNERSHIP_TICKERS_CSV = os.path.join(DATA_EXTERNAL_DIR, "over_100_ownership.csv")
+SUBMISSIONS_DIR = os.path.join(DATA_DIR, "submissions")
 SUBMISSIONS_FILERS_DIR = os.path.join(DATA_DIR, "submissions", "filers")
 SUBMISSIONS_STOCKS_DIR = os.path.join(DATA_DIR, "submissions", "stocks")
 STOCKS_SHS_Q_END_PRICES_FILE = os.path.join(DATA_EXTERNAL_DIR, 'stock_shs_q_end_prices.csv')
