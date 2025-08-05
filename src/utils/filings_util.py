@@ -1,4 +1,5 @@
 import glob
+import json
 import math
 import os
 import re
@@ -14,7 +15,36 @@ from utils.date_util import get_year_and_quarter
 from utils.file_util import extract_filername_year_quarter_accession, extract_year_quarter_from_filename
 from utils.mappings import BASE_DIR_FINAL, STOCKS_SHS_Q_END_PRICES_FILE, CIK_TO_PARSED_13F_DIR, \
     CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER, HEADERS, \
-    RAW_PARSED_HOLDINGS_DIRECTORIES, FILER_ACCESSION_METADATA
+    RAW_PARSED_HOLDINGS_DIRECTORIES, FILER_ACCESSION_METADATA, SUBMISSIONS_FILERS_DIR
+
+def make_filer_submission_filename(cik):
+    cik_numeric = cik.lstrip('0')  # remove leading zeros if any
+    cik_padded = cik_numeric.zfill(10)
+    return f"CIK{cik_padded}.json"
+
+
+def get_filing_date_from_submission(filer_submission_filename : str, accession_nr_clean):
+    filepath = os.path.join(SUBMISSIONS_FILERS_DIR, filer_submission_filename)
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Submission file not found for file at {filepath}")
+    with open(filepath, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    filings = data.get("filings", {}).get("recent", {})
+    accession_numbers = filings.get("accessionNumber", [])
+    acceptance_datetimes = filings.get("acceptanceDateTime", [])
+
+    target_acc = accession_nr_clean.lstrip('0')  # Remove leading zeros if any remain
+    for acc, acceptance_dt in zip(accession_numbers, acceptance_datetimes):
+        if acc is None:
+            continue
+        acc_clean = acc.replace("-", "").lstrip('0')
+        if acc_clean == target_acc:
+            if acceptance_dt and len(acceptance_dt) >= 10:
+                return acceptance_dt[:10]  # Return YYYY-MM-DD
+            else:
+                return None
+    return None
 
 
 def is_reported_in_thousands(row):
@@ -50,7 +80,24 @@ def create_filer_accession_metadata_file():
                             metadata.append({"cik": cik_folder, "accession_nr": accession_nr})
 
     metadata_df = pd.DataFrame(metadata)
-    metadata_df.to_csv(FILER_ACCESSION_METADATA, index=False)
+
+    results = []
+    for _, row in metadata_df.iterrows():
+        cik = row['cik']
+        accession_nr = row['accession_nr']
+        filer_submission_filename = make_filer_submission_filename(cik)
+        try:
+            filing_date = get_filing_date_from_submission(filer_submission_filename, accession_nr)
+        except FileNotFoundError:
+            filing_date = None  # Or handle missing submission file as you prefer
+        results.append({
+            "cik": cik,
+            "accession_nr": accession_nr,
+            "filing_date": filing_date
+        })
+
+    results_df = pd.DataFrame(results)
+    results_df.to_csv(FILER_ACCESSION_METADATA, index=False)
 
 
 def correct_share_values_thousands(year : str, quarter : str, filers=None):
