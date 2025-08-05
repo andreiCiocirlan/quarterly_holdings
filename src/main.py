@@ -18,7 +18,7 @@ def main():
     # for cik_to_filer in cik_to_filers:
         # for cik in cik_to_filer.keys():
             # download_filing_to_csv(cik, latest_n_filings=5, use_requests=False)
-        # generate_13f_and_add_chg_ownership_for_ciks(cik_to_filer.keys())
+        # generate_13f_and_add_extra_cols(cik_to_filer.keys())
 
 
     # STEP 1 : delete all csvs, clean-slate
@@ -26,7 +26,7 @@ def main():
 
     # STEP 2 : generate final 13f from raw-parsed 13f  (make sure prop_below_1 is commented in add_quarter_end_price)
     # for cik_to_filer in cik_to_filers:
-    #     generate_13f_and_add_chg_ownership_for_ciks(cik_to_filer.keys())
+    #     generate_13f_and_add_extra_cols(cik_to_filer.keys())
 
     # STEP 3 : make sure STOCKS_SHS_Q_END_PRICES_FILE has no quarter_end_price values
     # remove_column_values_from_file(file=STOCKS_SHS_Q_END_PRICES_FILE)
@@ -45,7 +45,7 @@ def main():
     # found_ciks = ['1094749']
     # for cik in found_ciks:
     #     download_filing_to_csv(cik, latest_n_filings=1, use_requests=False)
-    # generate_13f_and_add_chg_ownership_for_ciks(found_ciks)
+    # generate_13f_and_add_extra_cols(found_ciks)
 
 
     # STEP 7 : correct files that report in thousands
