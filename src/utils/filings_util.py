@@ -465,10 +465,8 @@ def add_chg_ownership_columns(cik_to_filer):
 
 
 def add_change_ownership_columns(current_file_path, aum_folder, filer_name, file_year, file_quarter, shares_df):
-    # Load current quarter data
     df_current = pd.read_csv(current_file_path)
 
-    # Convert quarter number to string format 'Q1', 'Q2', ...
     quarter_str = f"Q{file_quarter}"
 
     # Filter shares_df for matching year and quarter BEFORE merge
@@ -479,8 +477,6 @@ def add_change_ownership_columns(current_file_path, aum_folder, filer_name, file
     # Merge df_current with shares_subset on ticker
     df_current = df_current.merge(shares_subset, on='ticker', how='left')
 
-    # Now 'outstanding_shares' should exist in df_current.
-    # Calculate ownership_pct, carefully handle missing or zero outstanding_shares
     def calc_ownership_pct(row):
         os_shares = row.get('outstanding_shares')
         if pd.isna(os_shares) or os_shares == 0:
@@ -556,7 +552,6 @@ def extract_params_from_path(full_path, file_name):
     filer_name = m_file.group(1)
 
     return aum_folder, filer_name, year, quarter
-# convert raw csv to shorter version: rank,ticker,share_amount,share_value
 
 
 def _generate_13f_csv(cik_to_filer: dict[str, str]):
