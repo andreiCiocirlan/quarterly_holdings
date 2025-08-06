@@ -512,9 +512,7 @@ def add_change_ownership_columns(cik_to_filer, tickers=None):
                     continue
 
                 aum_path = os.path.join(quarter_path, aum_folder)
-                if not os.path.isdir(aum_path):
-                    print(f"Warning: Expected filings directory missing: {aum_path}. No filings available "
-                          f"for filer '{filer_name}' in year {year}, quarter {quarter}. Continuing to next.")
+                if not os.path.isdir(aum_path): # reached oldest file for filer, no previous quarter file
                     continue
 
                 for fname in os.listdir(aum_path):
