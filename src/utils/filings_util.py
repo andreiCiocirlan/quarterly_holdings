@@ -622,7 +622,7 @@ def add_quarter_end_price(cik_to_filer, base_dir=BASE_DIR_FINAL, threshold=0.5):
             if prop_below_1 > threshold:
                 year, quarter = extract_year_quarter_from_filename(file)
                 df['quarter_end_price'] = df.apply(lambda row: replace_price(row, year, quarter), axis=1)
-                print(f"replaced with dict prices: {file_path}")
+                print(f"replaced with quarter end prices from QUARTER_END_PRICE_DICT: {file_path}")
 
             df.to_csv(file_path, index=False)
 
