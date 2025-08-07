@@ -54,5 +54,9 @@ def main():
     # correct_share_values_thousands('2024', 'Q4')
     # correct_share_values_thousands('2025', 'Q1')
 
+    # STEP 8 : create filer accession filing_date file
+    # create_filer_accession_metadata_file()
+
+
 if __name__ == "__main__":
     main()
