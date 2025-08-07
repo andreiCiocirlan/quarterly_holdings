@@ -117,7 +117,6 @@ def correct_share_values_for_csv(file, root):
         df = pd.read_csv(csv_path)
         df = _correct_share_values_reported_in_thousands(df, csv_path)  # fix values reported in thousands
         df['share_value'] = df['share_value'].fillna(0)
-        ranks = df['share_value'].rank(method='first', ascending=False)
         df['rank'] = df['share_value'].rank(method='first', ascending=False).astype(int)
         df = df.sort_values('rank')
         df.to_csv(csv_path, index=False)
