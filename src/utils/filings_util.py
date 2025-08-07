@@ -117,6 +117,7 @@ def correct_share_values_for_csv(file, root):
         df = pd.read_csv(csv_path)
         df = _correct_share_values_reported_in_thousands(df, csv_path)  # fix values reported in thousands
         df['share_value'] = df['share_value'].fillna(0)
+        ranks = df['share_value'].rank(method='first', ascending=False)
         df['rank'] = df['share_value'].rank(method='first', ascending=False).astype(int)
         df = df.sort_values('rank')
         df.to_csv(csv_path, index=False)
@@ -630,7 +631,11 @@ def add_quarter_end_price(cik_to_filer, base_dir=BASE_DIR_FINAL, threshold=0.5):
 
             file_path = os.path.join(root, file)
             df = pd.read_csv(file_path)
-            df['quarter_end_price'] = (df['share_value'] / df['share_amount']).round(2)
+            df['quarter_end_price'] = np.where(
+                df['share_amount'] == 0,
+                np.nan,  # or you can use 0 or some default price, but NaN is safer to avoid misleading data
+                (df['share_value'] / df['share_amount']).round(2)
+            )
 
             prop_below_1 = (df['quarter_end_price'] < 1).mean()
             if prop_below_1 > threshold:
