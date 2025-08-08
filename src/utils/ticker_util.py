@@ -187,9 +187,18 @@ def check_price_discrepancies_simple(base_dir):
 def get_most_frequent_price_per_ticker(ticker_prices):
     most_freq_price = {}
     for ticker, price_counts in ticker_prices.items():
-        # Get price with max count
-        price_with_max_count = price_counts.most_common(1)[0][0]
-        most_freq_price[ticker] = price_with_max_count
+        # get top 2 in case first is 0.0
+        common_prices = price_counts.most_common(2)
+        price = (
+            common_prices[1][0]
+            if common_prices and common_prices[0][0] == 0.0 and len(common_prices) > 1 and common_prices[1][0] != 0.0
+            else common_prices[0][0]
+            if common_prices else None
+        )
+        if price == 0.0:
+            print(f"Warning: ticker {ticker} has no non-zero prices with counts {price_counts}")
+        if price is not None:
+            most_freq_price[ticker] = price
     return most_freq_price
 
 
