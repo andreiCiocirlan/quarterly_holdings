@@ -368,7 +368,7 @@ def combine_quarterly_files(folder_path, filer_name, cik):
 
         # Group and sum
         grouped = (
-            combined_df.groupby(['ticker', 'cusip'], as_index=False)
+            combined_df.groupby(['ticker'], as_index=False)
             .agg({'share_amount': 'sum', 'share_value': 'sum'})
         )
 
@@ -429,8 +429,8 @@ def generate_13f_and_add_extra_cols(ciks: set[str] | list[str]):
 
 def _generate_13f_and_add_extra_cols(cik_to_filer: dict[str, str]):
     _generate_13f_csv(cik_to_filer)
-    add_chg_ownership_columns(cik_to_filer)
-    add_quarter_end_price(cik_to_filer)
+    # add_chg_ownership_columns(cik_to_filer)
+    # add_quarter_end_price(cik_to_filer)
 
 def add_chg_ownership_columns(cik_to_filer):
     shares_df = load_shares_outstanding(STOCKS_SHS_Q_END_PRICES_FILE)
