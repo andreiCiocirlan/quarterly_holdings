@@ -307,9 +307,9 @@ def find_filing_URL_for_cik_year_quarter(cik, year : str, quarter : str, form_ty
 
 def get_latest_10qk_urls(cik, lookback=3, form_type="10-Q", url=None):
     if url:
-        resp = requests.get(url, headers=HEADERS)
+        resp = limited_get(url)
     else:
-        resp = requests.get(f"https://data.sec.gov/submissions/CIK{str(int(cik)).zfill(10)}.json", headers=HEADERS)
+        resp = limited_get(f"https://data.sec.gov/submissions/CIK{str(int(cik)).zfill(10)}.json")
 
     if resp.status_code != 200:
         raise Exception(f"Failed to fetch submissions for CIK {cik}")

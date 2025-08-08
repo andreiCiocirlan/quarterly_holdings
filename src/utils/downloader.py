@@ -46,7 +46,7 @@ def latest_filing_metadata(cik, latest_n_filings=1, skip_quarters_years=None, in
     if use_requests:
         # https://data.sec.gov/submissions/CIK0002012383.json
         url = f"https://data.sec.gov/submissions/CIK{cik_str}.json"
-        resp = requests.get(url, headers=HEADERS)
+        resp = limited_get(url)
         resp.raise_for_status()
         data = resp.json()
     else:
