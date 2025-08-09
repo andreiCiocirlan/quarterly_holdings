@@ -429,8 +429,8 @@ def generate_13f_and_add_extra_cols(ciks: set[str] | list[str]):
 
 def _generate_13f_and_add_extra_cols(cik_to_filer: dict[str, str]):
     _generate_13f_csv(cik_to_filer)
-    # add_chg_ownership_columns(cik_to_filer)
-    # add_quarter_end_price(cik_to_filer)
+    add_chg_ownership_columns(cik_to_filer)
+    add_quarter_end_price(cik_to_filer)
 
 def add_chg_ownership_columns(cik_to_filer):
     shares_df = load_shares_outstanding(STOCKS_SHS_Q_END_PRICES_FILE)
