@@ -577,8 +577,9 @@ def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None, form
 
 def check_duplicate_rows_shs_file(shares_df):
     duplicates = shares_df[shares_df.duplicated(subset=['ticker', 'year', 'quarter'], keep=False)]
-    print("These rows are duplicated based on ticker, year, and quarter:")
-    print(duplicates)
+    if duplicates is not None:
+        print("These rows are duplicated based on ticker, year, and quarter:")
+        print(duplicates)
 
 
 def main():
