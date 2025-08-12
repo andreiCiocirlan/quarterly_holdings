@@ -67,12 +67,14 @@ def is_reported_in_thousands(row):
     return abs(ratio - 0.001) < 1e-2
 
 
-def create_filer_accession_metadata_file():
+def create_filer_accession_metadata_file(ciks=None):
     metadata = []
     for base_dir in RAW_PARSED_HOLDINGS_DIRECTORIES:
         if os.path.exists(base_dir):
             for cik_folder in os.listdir(base_dir):
                 cik_path = os.path.join(base_dir, cik_folder)
+                if ciks is not None and cik_folder not in ciks:
+                    continue
                 if os.path.isdir(cik_path):
                     for file in os.listdir(cik_path):
                         if file.endswith(".csv"):
