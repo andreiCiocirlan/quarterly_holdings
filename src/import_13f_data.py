@@ -464,7 +464,7 @@ def import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=8, accessions
                 print(f"Error in worker: {e}")
 
 
-def update_for_accessions(accessions):
+def update_db_for_accessions(accessions):
     conn = get_db_connection()
     conn.autocommit = False  # Explicit transaction control
 
