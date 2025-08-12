@@ -102,6 +102,31 @@ def create_filer_accession_metadata_file(ciks=None):
     results_df.to_csv(FILER_ACCESSION_METADATA, index=False)
 
 
+def populate_filenames_by_accession(final_dir, filer_accession_metadata, accessions=None):
+    df = pd.read_csv(filer_accession_metadata)
+    df['accession_nr'] = df['accession_nr'].astype(str).str.strip()
+
+    accession_to_files = {}
+    for root, dirs, files in os.walk(final_dir):
+        for filename in files:
+            if filename.endswith('.csv'):
+                parts = filename.rsplit('-', 1)
+                if len(parts) == 2:
+                    accession_part = parts[1].replace('.csv', '').strip()
+                    if accessions is None or accession_part in accessions:
+                        accession_to_files.setdefault(accession_part, []).append(filename)
+
+    file_names = df['file_name'].copy()
+
+    for acc, files in accession_to_files.items():
+        mask = df['accession_nr'] == acc
+        file_names.loc[mask] = ','.join(files)
+
+    df['file_name'] = file_names
+
+    df.to_csv(filer_accession_metadata, index=False)
+
+
 def correct_share_values_thousands(year : str, quarter : str, filers=None):
     filers_set = set(filers) if filers is not None else None
     for root, dirs, files in os.walk(os.path.join(BASE_DIR_FINAL, year, quarter)):
