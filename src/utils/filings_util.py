@@ -149,12 +149,13 @@ def _correct_share_values_reported_in_thousands(df, csv_path):
     return df
 
 
-def check_latest_13f(ciks, page_count=5):
+def check_latest_13f(ciks):
     normalized_ciks = set(str(int(cik)) for cik in ciks)
     base_url = "https://www.sec.gov/cgi-bin/browse-edgar"
     found_ciks = []
+    page = 1
 
-    for page in range(1, page_count + 1):
+    while True:
         params = {
             'company': '',
             'CIK': '',
@@ -171,7 +172,7 @@ def check_latest_13f(ciks, page_count=5):
         main_div = soup.find('div', style=lambda value: value and 'margin-left: 10px' in value)
         if not main_div:
             print("Main div with filings not found on page", page)
-            continue
+            break
 
         # Find the filings table by header detection as before
         tables = main_div.find_all('table')
@@ -187,9 +188,12 @@ def check_latest_13f(ciks, page_count=5):
 
         if not filings_table:
             print("Filings table not found on page", page)
-            continue
+            break
 
         rows = filings_table.find_all('tr')[1:]  # skip header
+        if not rows:
+            print(f"No filings found on page {page}. Stopping.")
+            break
 
         # Iterate rows with index to access previous row
         for i in range(1, len(rows)):
@@ -223,6 +227,8 @@ def check_latest_13f(ciks, page_count=5):
 
             if cik_norm in normalized_ciks and form_type in ['13F-HR', '13F-HR/A']:
                 found_ciks.append(cik_norm)
+
+        page += 1
 
     return found_ciks
 
