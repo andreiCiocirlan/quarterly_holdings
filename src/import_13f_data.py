@@ -434,8 +434,23 @@ def gather_all_csv_files(base_dir):
 
     return list(base_path.rglob('*.csv'))
 
-def import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=8):
+def import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=8, accessions=None):
     all_csv_files = gather_all_csv_files(base_dir)
+
+    if accessions is not None:
+        accessions_set = set(accessions)
+
+        def file_has_accession(file_path):
+            # Extract the accession number from the filename
+            name = file_path.stem  # filename without suffix
+            parts = name.split('-')
+            if len(parts) < 2:
+                return False
+            accession_in_file = parts[-1]  # get part after last '-'
+            return accession_in_file in accessions_set
+
+        all_csv_files = [f for f in all_csv_files if file_has_accession(f)]
+
     print(f"Total CSV files to process: {len(all_csv_files)}")
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
