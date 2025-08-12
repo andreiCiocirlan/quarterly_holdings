@@ -464,6 +464,26 @@ def import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=8, accessions
                 print(f"Error in worker: {e}")
 
 
+def update_for_accessions(accessions):
+    conn = get_db_connection()
+    conn.autocommit = False  # Explicit transaction control
+
+    try:
+        import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=12, accessions=accessions)
+
+        add_filings_holding_count_and_value(conn)
+        conn.commit()
+
+        update_stocks_table(conn)
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error during update: {e}")
+    finally:
+        conn.close()
+        print("Database connection closed.")
+
+
 def drop_all_tables(conn):
     with conn.cursor() as cur:
         tables = ['holdings', 'filings', 'stocks', 'filers']  # drop in this order to respect FK dependencies if any
