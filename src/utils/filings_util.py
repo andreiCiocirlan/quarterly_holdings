@@ -68,20 +68,26 @@ def is_reported_in_thousands(row):
     return abs(ratio - 0.001) < 1e-2
 
 
-def create_filer_accession_metadata_file(ciks=None):
-    # Step 1: Load existing metadata if the file exists, else create empty DataFrame
-    if os.path.exists(FILER_ACCESSION_METADATA):
-        existing_df = pd.read_csv(FILER_ACCESSION_METADATA).astype(str)
+def create_and_populate_filer_accession_metadata(
+        ciks=None,
+        raw_parsed_holdings_dirs=RAW_PARSED_HOLDINGS_DIRECTORIES,
+        final_dir=BASE_DIR_FINAL,
+        metadata_path=FILER_ACCESSION_METADATA,
+        cik_to_filer=CIK_TO_FILER
+):
+    # --- Step 1: Load existing metadata or create empty DataFrame ---
+    if os.path.exists(metadata_path):
+        existing_df = pd.read_csv(metadata_path).astype(str)
     else:
-        existing_df = pd.DataFrame(columns=["cik", "accession_nr", "filing_date"])
+        existing_df = pd.DataFrame(columns=["cik", "accession_nr", "filing_date", "filer_name"])
 
-    # Normalize ciks input for comparison
+    # Normalize ciks input
     if ciks is not None:
         ciks = set(str(cik) for cik in ciks)
 
-    # Step 2: Build new metadata for requested CIKs (or for all if ciks=None)
+    # --- Step 2: Build new metadata from directories ---
     metadata = []
-    for base_dir in RAW_PARSED_HOLDINGS_DIRECTORIES:
+    for base_dir in raw_parsed_holdings_dirs:
         if os.path.exists(base_dir):
             for cik_folder in os.listdir(base_dir):
                 if ciks is not None and cik_folder not in ciks:
@@ -95,7 +101,7 @@ def create_filer_accession_metadata_file(ciks=None):
 
     metadata_df = pd.DataFrame(metadata).astype(str)
 
-    # Step 3: For each row in metadata_df, get filing_date (as you did)
+    # --- Step 3: Get filing_date for each accession ---
     results = []
     for _, row in metadata_df.iterrows():
         cik = row['cik']
@@ -104,7 +110,7 @@ def create_filer_accession_metadata_file(ciks=None):
         try:
             filing_date = get_filing_date_from_submission(filer_submission_filename, accession_nr)
         except FileNotFoundError:
-            filing_date = None
+            filing_date = ''
         results.append({
             "cik": cik,
             "accession_nr": accession_nr,
@@ -112,55 +118,34 @@ def create_filer_accession_metadata_file(ciks=None):
         })
 
     new_data_df = pd.DataFrame(results).astype(str)
+    new_data_df['filer_name'] = ''  # Initialize filer_name column
 
-    # Step 4: Merge new data with existing_df
-    # Remove rows from existing_df for the ciks we are updating (if ciks given)
+    # --- Step 4: Remove existing rows for the updated ciks and append new data ---
     if ciks is not None:
         existing_df = existing_df[~existing_df['cik'].isin(ciks)]
 
-    # Append new_data_df rows (which have the updated data for passed ciks)
     merged_df = pd.concat([existing_df, new_data_df], ignore_index=True)
 
-    # Optional: drop duplicates based on 'cik' and 'accession_nr' if needed, keeping last (new data)
+    # Drop duplicates on cik + accession_nr, keep last
     merged_df.drop_duplicates(subset=['cik', 'accession_nr'], keep='last', inplace=True)
 
-    # Step 5: Save the merged DataFrame back
-    merged_df.to_csv(FILER_ACCESSION_METADATA, index=False)
+    # --- Step 5: Populate filer_name column from cik using CIK_TO_FILER dict ---
+    merged_df['filer_name'] = merged_df['cik'].map(cik_to_filer).fillna('')
 
-    # populate file_name for accessions
-    if ciks is None:
-        accessions = None
-    else:
-        accessions = []
-        for cik in ciks:
-            accessions.extend(CIK_TO_ACCESSIONS.get(cik, []))
+    # --- Step 6: Reorder columns: put filer_name first ---
+    cols = merged_df.columns.tolist()
+    if 'filer_name' in cols:
+        cols.remove('filer_name')
+        merged_df = merged_df[['filer_name'] + cols]
 
-    populate_filenames_by_accession(final_dir=BASE_DIR_FINAL, filer_accession_metadata=FILER_ACCESSION_METADATA, accessions=accessions)
+    # --- Step 7: Sort by filer_name ---
+    merged_df = merged_df.sort_values(by='filer_name').reset_index(drop=True)
 
+    # --- Step 8: Save to CSV ---
+    merged_df.to_csv(metadata_path, index=False)
 
-def populate_filenames_by_accession(final_dir, filer_accession_metadata, accessions=None):
-    df = pd.read_csv(filer_accession_metadata)
-    df['accession_nr'] = df['accession_nr'].astype(str).str.strip()
+    print(f"Metadata updated and saved to {metadata_path}")
 
-    accession_to_files = {}
-    for root, dirs, files in os.walk(final_dir):
-        for filename in files:
-            if filename.endswith('.csv'):
-                parts = filename.rsplit('-', 1)
-                if len(parts) == 2:
-                    accession_part = parts[1].replace('.csv', '').strip()
-                    if accessions is None or accession_part in accessions:
-                        accession_to_files.setdefault(accession_part, []).append(filename)
-
-    file_names = df['file_name'].copy()
-
-    for acc, files in accession_to_files.items():
-        mask = df['accession_nr'] == acc
-        file_names.loc[mask] = ','.join(files)
-
-    df['file_name'] = file_names
-
-    df.to_csv(filer_accession_metadata, index=False)
 
 
 def correct_share_values_thousands(year : str, quarter : str, filers=None):
