@@ -1,5 +1,6 @@
-from utils.filings_util import generate_13f_and_add_extra_cols
-from utils.mappings import CIK_TO_FILER_OVER_250B
+from utils.downloader import download_filing_to_csv
+from utils.filings_util import generate_13f_and_add_extra_cols, check_latest_13f
+from utils.mappings import CIK_TO_FILER
 
 
 def main():
@@ -11,7 +12,7 @@ def main():
         # CIK_TO_FILER_10B_TO_25B,
         # CIK_TO_FILER_25B_TO_50B,
         # CIK_TO_FILER_50B_TO_250B,
-        CIK_TO_FILER_OVER_250B
+        # CIK_TO_FILER_OVER_250B
     ]
 
     # STEP 0 : import raw 13f for ciks (start with CIK_TO_FILER_OVER_250B as it has fewer filers)
@@ -40,12 +41,12 @@ def main():
 
 
     # STEP 6 : check if any new 13f was filed
-    # found_ciks = check_latest_13f(CIK_TO_FILER.keys())
-    # print(found_ciks)
-    # found_ciks = ['1094749']
-    # for cik in found_ciks:
-    #     download_filing_to_csv(cik, latest_n_filings=1, use_requests=False)
-    # generate_13f_and_add_extra_cols(found_ciks)
+    found_ciks = check_latest_13f(CIK_TO_FILER.keys())
+    print(found_ciks)
+    found_ciks = ['1094749']
+    for cik in found_ciks:
+        download_filing_to_csv(cik, latest_n_filings=2, use_requests=True)
+    generate_13f_and_add_extra_cols(found_ciks)
 
 
     # STEP 7 : correct files that report in thousands
@@ -55,7 +56,7 @@ def main():
     # correct_share_values_thousands('2025', 'Q1')
 
     # STEP 8 : create filer accession filing_date file
-    # create_filer_accession_metadata_file()
+    # create_and_populate_filer_accession_metadata()
 
 
 if __name__ == "__main__":
