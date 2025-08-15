@@ -484,6 +484,44 @@ def update_db_for_accessions(accessions):
         print("Database connection closed.")
 
 
+def delete_stale_new_holdings_restatements():
+    conn = get_db_connection()
+    conn.autocommit = False  # Explicit transaction control
+
+    delete_query = """
+        WITH duplicate_groups AS (
+            SELECT cik, year, quarter
+            FROM filings
+            GROUP BY cik, year, quarter
+            HAVING COUNT(*) > 1
+        ),
+        ranked_filings AS (
+            SELECT
+                f.*,
+                ROW_NUMBER() OVER (
+                    PARTITION BY f.cik, f.year, f.quarter
+                    ORDER BY f.filing_date DESC, f.holdings_count DESC
+                ) AS rn
+            FROM filings f
+            JOIN duplicate_groups dg
+              ON f.cik = dg.cik
+             AND f.year = dg.year
+             AND f.quarter = dg.quarter
+        )
+        DELETE FROM filings
+        WHERE accession_nr IN (
+            SELECT accession_nr
+            FROM ranked_filings
+            WHERE rn > 1
+        );
+    """
+    with conn.cursor() as cur:
+        cur.execute(delete_query)
+        deleted_rows = cur.rowcount
+        print(f'Deleted {deleted_rows} stale 13F New Holdings, Restatements in filings table')
+    conn.commit()
+
+
 def drop_all_tables(conn):
     with conn.cursor() as cur:
         tables = ['holdings', 'filings', 'stocks', 'filers']  # drop in this order to respect FK dependencies if any
