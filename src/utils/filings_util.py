@@ -68,16 +68,10 @@ def is_reported_in_thousands(row):
     return abs(ratio - 0.001) < 1e-2
 
 
-def create_and_populate_filer_accession_metadata(
-        ciks=None,
-        raw_parsed_holdings_dirs=RAW_PARSED_HOLDINGS_DIRECTORIES,
-        final_dir=BASE_DIR_FINAL,
-        metadata_path=FILER_ACCESSION_METADATA,
-        cik_to_filer=CIK_TO_FILER
-):
+def create_and_populate_filer_accession_metadata(ciks=None):
     # --- Step 1: Load existing metadata or create empty DataFrame ---
-    if os.path.exists(metadata_path):
-        existing_df = pd.read_csv(metadata_path).astype(str)
+    if os.path.exists(FILER_ACCESSION_METADATA):
+        existing_df = pd.read_csv(FILER_ACCESSION_METADATA).astype(str)
     else:
         existing_df = pd.DataFrame(columns=["cik", "accession_nr", "filing_date", "filer_name"])
 
@@ -87,7 +81,7 @@ def create_and_populate_filer_accession_metadata(
 
     # --- Step 2: Build new metadata from directories ---
     metadata = []
-    for base_dir in raw_parsed_holdings_dirs:
+    for base_dir in RAW_PARSED_HOLDINGS_DIRECTORIES:
         if os.path.exists(base_dir):
             for cik_folder in os.listdir(base_dir):
                 if ciks is not None and cik_folder not in ciks:
@@ -130,7 +124,7 @@ def create_and_populate_filer_accession_metadata(
     merged_df.drop_duplicates(subset=['cik', 'accession_nr'], keep='last', inplace=True)
 
     # --- Step 5: Populate filer_name column from cik using CIK_TO_FILER dict ---
-    merged_df['filer_name'] = merged_df['cik'].map(cik_to_filer).fillna('')
+    merged_df['filer_name'] = merged_df['cik'].map(CIK_TO_FILER).fillna('')
 
     # --- Step 6: Reorder columns: put filer_name first ---
     cols = merged_df.columns.tolist()
@@ -142,9 +136,9 @@ def create_and_populate_filer_accession_metadata(
     merged_df = merged_df.sort_values(by=['filer_name', 'filing_date']).reset_index(drop=True)
 
     # --- Step 8: Save to CSV ---
-    merged_df.to_csv(metadata_path, index=False)
+    merged_df.to_csv(FILER_ACCESSION_METADATA, index=False)
 
-    print(f"Metadata updated and saved to {metadata_path}")
+    print(f"Metadata updated and saved to {FILER_ACCESSION_METADATA}")
 
 
 
