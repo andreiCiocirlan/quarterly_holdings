@@ -139,7 +139,7 @@ def create_and_populate_filer_accession_metadata(
         merged_df = merged_df[['filer_name'] + cols]
 
     # --- Step 7: Sort by filer_name ---
-    merged_df = merged_df.sort_values(by='filer_name').reset_index(drop=True)
+    merged_df = merged_df.sort_values(by=['filer_name', 'filing_date']).reset_index(drop=True)
 
     # --- Step 8: Save to CSV ---
     merged_df.to_csv(metadata_path, index=False)
