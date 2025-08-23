@@ -220,7 +220,7 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
             print(f"Saved {report_date} {form_type} file: {file_path}")
 
 
-def latest_filings_download(prev_found_ciks=None, include_quarters_years=None, use_requests=None):
+def latest_filings_download(prev_found_ciks=None, latest_n_filings=None, include_quarters_years=None, use_requests=None):
     if prev_found_ciks is None:
         # treat as empty set (nothing previously found)
         prev_found_ciks_set = set()
@@ -237,13 +237,16 @@ def latest_filings_download(prev_found_ciks=None, include_quarters_years=None, u
     if use_requests is None:
         use_requests=False
 
+    if latest_n_filings is None:
+        latest_n_filings=2
+
     for cik in ciks_imported:
-        latest_metadata = latest_filing_metadata(cik, latest_n_filings=2,
+        latest_metadata = latest_filing_metadata(cik, latest_n_filings=latest_n_filings,
                                                  include_quarters_years=include_quarters_years, use_requests=use_requests)
         existing_accessions = set(CIK_TO_ACCESSIONS.get(cik, []))
         for accession_number, _, _, amendment_type in latest_metadata:
             accession_clean = accession_number.replace("-","").lstrip('0')
             if accession_clean not in existing_accessions:
-                download_filing_to_csv(cik, latest_n_filings=2, include_quarters_years=include_quarters_years, use_requests=use_requests, latest_metadata=latest_metadata)
+                download_filing_to_csv(cik, latest_n_filings=latest_n_filings, include_quarters_years=include_quarters_years, use_requests=use_requests, latest_metadata=latest_metadata)
 
     return ciks_imported
