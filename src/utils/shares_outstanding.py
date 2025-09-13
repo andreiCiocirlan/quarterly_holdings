@@ -461,18 +461,10 @@ def get_tickers_without_shares_outstanding(quarter: str = "Q1", year=2025):
     return tickers_without_data
 
 
-def add_quarter_end_price_to_sh_outstanding_file(year_quarter_list=None):
+def add_quarter_end_price_to_sh_outstanding_file(year_quarter_list):
     # Load existing shares outstanding file, including existing quarter_end_price column
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE,
                      dtype={'ticker': str, 'year': str, 'quarter': str, 'outstanding_shares': 'Int64'})
-
-    # If no year_quarter_list passed, get all unique (year, quarter) pairs except [2025, 'Q3']
-    if not year_quarter_list:
-        year_quarter_list = [
-            [year, quarter]
-            for year, quarter in df[['year', 'quarter']].drop_duplicates().values.tolist()
-            if not (year == '2025' and quarter == 'Q3')
-        ]
 
     # Filter df to rows for the requested year_quarter_list to update prices only here
     mask = df.apply(lambda row: [row['year'], row['quarter']] in year_quarter_list, axis=1)
@@ -546,11 +538,7 @@ def update_multiple_years_quarters(year_quarter_list=None):
         update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
 
 
-def update_year_quarter_stocks_shs_and_q_end_price(year=None, quarter=None, form_type=None):
-    if year is None:
-        year = '2025'
-    if quarter is None:
-        quarter = 'Q2'
+def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, form_type=None):
     if form_type is None:
         form_type = '10-Q'
 
