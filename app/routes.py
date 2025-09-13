@@ -81,6 +81,35 @@ def index():
 
     return render_template('index.html', filers=filers, graphJSON_top10=graphJSON_top10, graphJSON_comparison=graphJSON_comparison)
 
+@bp.route('/latest-filings')
+def latest_filings():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT
+            f.cik,
+            f.formatted_name,
+            fl.year,
+            fl.quarter,
+            fl.holdings_count,
+            fl.holdings_value,
+            fl.accession_nr,
+            fl.filing_date
+        FROM filings fl
+        JOIN filers f ON f.cik = fl.cik
+        WHERE fl.filing_date IS NOT NULL
+        ORDER BY fl.filing_date DESC
+        LIMIT 1000;
+    """
+    cur.execute(query)
+    latest = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('latest_filings.html', latest=latest)
+
 
 @bp.route('/letter/<letter>')
 def filers_by_letter(letter):
