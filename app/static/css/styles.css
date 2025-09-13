@@ -12,6 +12,11 @@ table th, table td {
   white-space: nowrap;     /* prevents cell content from wrapping and widening cells */
 }
 
+table td:first-child,
+table th:first-child {
+    text-align: center !important;
+}
+
 thead tr:first-child th {
   background-color: #444;  /* Darker gray */
   border: 1px solid #999;
