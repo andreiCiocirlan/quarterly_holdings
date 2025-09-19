@@ -41,8 +41,8 @@ def main():
 
 
     # STEP 6 : check if any new 13f was filed
-    latest_ciks_and_accessions = latest_13f_ciks_and_accessions(CIK_TO_FILER.keys())
-    found_ciks = list(latest_ciks_and_accessions.keys())
+    ciks, accessions = latest_13f_ciks_and_accessions(CIK_TO_FILER.keys())
+    found_ciks = ciks
     print(found_ciks)
     found_ciks = ['1094749']
     for cik in found_ciks:

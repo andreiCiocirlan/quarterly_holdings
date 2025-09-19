@@ -226,8 +226,8 @@ def latest_filings_download(prev_found_ciks=None, latest_n_filings=None, include
     else:
         prev_found_ciks_set = set(prev_found_ciks)
 
-    latest_ciks_and_accessions = latest_13f_ciks_and_accessions(CIK_TO_FINAL_DIR.keys())
-    found_ciks = list(latest_ciks_and_accessions.keys())
+    ciks, accessions = latest_13f_ciks_and_accessions(CIK_TO_FINAL_DIR.keys())
+    found_ciks = ciks
     ciks_imported = list(set(found_ciks) - prev_found_ciks_set)
     print(f"Importing 13F-HR data for ciks: {ciks_imported}")
 

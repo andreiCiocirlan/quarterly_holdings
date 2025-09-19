@@ -220,7 +220,8 @@ def update_filing_date_for_accession(cik_norm, accession_nr, filing_date):
 def latest_13f_ciks_and_accessions(ciks):
     normalized_ciks = set(str(int(cik)) for cik in ciks)
     base_url = "https://www.sec.gov/cgi-bin/browse-edgar"
-    cik_to_accessions = {}
+    ciks = []
+    accessions = []
     page = 1
 
     while True:
@@ -301,13 +302,12 @@ def latest_13f_ciks_and_accessions(ciks):
                     if match:
                         accession_number = match.group(1).replace('-', '').lstrip('0')
                         update_filing_date_for_accession(cik_norm, accession_number, filing_date)
-                        if cik_norm not in cik_to_accessions:
-                            cik_to_accessions[cik_norm] = []
-                        cik_to_accessions[cik_norm].append(accession_number)
+                        ciks.append(cik_norm)
+                        accessions.append(accession_number)
 
         page += 1
 
-    return cik_to_accessions
+    return ciks, accessions
 
 
 def check_csv_structure(file_path):
