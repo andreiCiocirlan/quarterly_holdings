@@ -195,10 +195,10 @@ def _correct_share_values_reported_in_thousands(df, csv_path):
     return df
 
 
-def check_latest_13f(ciks):
+def latest_13f_ciks_and_accessions(ciks):
     normalized_ciks = set(str(int(cik)) for cik in ciks)
     base_url = "https://www.sec.gov/cgi-bin/browse-edgar"
-    found_ciks = []
+    cik_to_accessions = {}
     page = 1
 
     while True:
@@ -272,11 +272,20 @@ def check_latest_13f(ciks):
             cik_norm = str(int(cik_raw))  # '2070929' (no leading zeros)
 
             if cik_norm in normalized_ciks and form_type in ['13F-HR', '13F-HR/A']:
-                found_ciks.append(cik_norm)
+                filing_link_tag = filing_cols[1].find('a')
+                if filing_link_tag:
+                    href = filing_link_tag.get('href', '')
+                    match = re.search(r'/(\d{10}-\d{2}-\d{6})-', href)
+                    if match:
+                        accession_number = match.group(1).replace('-', '').lstrip('0')
+                        update_filing_date_for_accession(cik_norm, accession_number, filing_date)
+                        if cik_norm not in cik_to_accessions:
+                            cik_to_accessions[cik_norm] = []
+                        cik_to_accessions[cik_norm].append(accession_number)
 
         page += 1
 
-    return found_ciks
+    return cik_to_accessions
 
 
 def check_csv_structure(file_path):

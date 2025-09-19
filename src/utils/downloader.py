@@ -4,13 +4,12 @@ from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
 
-import requests
 from bs4 import BeautifulSoup
 
 from cfg.cfg_requests import limited_get
 from utils.date_util import get_year_and_quarter
-from utils.filings_util import delete_stale_13f_raw, delete_final_13f_by_accession, check_latest_13f
-from utils.mappings import CIK_TO_PARSED_13F_DIR, SUBMISSIONS_FILERS_DIR, HEADERS, CIK_TO_FINAL_DIR, CIK_TO_ACCESSIONS
+from utils.filings_util import delete_stale_13f_raw, delete_final_13f_by_accession, latest_13f_ciks_and_accessions
+from utils.mappings import CIK_TO_PARSED_13F_DIR, SUBMISSIONS_FILERS_DIR, CIK_TO_FINAL_DIR, CIK_TO_ACCESSIONS
 from utils.parser import parse_holdings
 
 
@@ -227,7 +226,8 @@ def latest_filings_download(prev_found_ciks=None, latest_n_filings=None, include
     else:
         prev_found_ciks_set = set(prev_found_ciks)
 
-    found_ciks = check_latest_13f(CIK_TO_FINAL_DIR.keys())
+    latest_ciks_and_accessions = latest_13f_ciks_and_accessions(CIK_TO_FINAL_DIR.keys())
+    found_ciks = list(latest_ciks_and_accessions.keys())
     ciks_imported = list(set(found_ciks) - prev_found_ciks_set)
     print(f"Importing 13F-HR data for ciks: {ciks_imported}")
 

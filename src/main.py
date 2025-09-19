@@ -1,5 +1,5 @@
 from utils.downloader import download_filing_to_csv
-from utils.filings_util import generate_13f_and_add_extra_cols, check_latest_13f
+from utils.filings_util import generate_13f_and_add_extra_cols, latest_13f_ciks_and_accessions
 from utils.mappings import CIK_TO_FILER
 
 
