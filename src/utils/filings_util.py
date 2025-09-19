@@ -195,6 +195,28 @@ def _correct_share_values_reported_in_thousands(df, csv_path):
     return df
 
 
+def update_filing_date_for_accession(cik_norm, accession_nr, filing_date):
+    df = pd.read_csv(FILER_ACCESSION_METADATA, dtype=str)
+
+    filer_name = CIK_TO_FILER.get(cik_norm, '')
+
+    # Check if accession_nr already exists in the DataFrame
+    if accession_nr in df['accession_nr'].values:
+        # Update filing_date, cik and filer_name for the matched accession_nr row(s)
+        df.loc[df['accession_nr'] == accession_nr, ['filing_date', 'cik', 'filer_name']] = [filing_date, cik_norm, filer_name]
+    else:
+        new_row = {
+            'filer_name': filer_name,
+            'cik': cik_norm,
+            'accession_nr': accession_nr,
+            'filing_date': filing_date
+        }
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    df = df.sort_values(by=['filer_name', 'filing_date']).reset_index(drop=True)
+    df.to_csv(FILER_ACCESSION_METADATA, index=False)
+
+
 def latest_13f_ciks_and_accessions(ciks):
     normalized_ciks = set(str(int(cik)) for cik in ciks)
     base_url = "https://www.sec.gov/cgi-bin/browse-edgar"
