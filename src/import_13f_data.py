@@ -225,6 +225,31 @@ def insert_stocks(conn):
     print(f"Inserted/updated {len(records)} rows into stocks table.")
 
 
+def correct_share_value(year, quarter):
+    conn = get_db_connection()
+    conn.autocommit = False  # Explicit transaction control
+
+    update_sql = """
+    UPDATE holdings h
+    SET share_value = h.share_amount * s.quarter_end_price
+    FROM filings f, stocks s
+    WHERE h.accession_nr = f.accession_nr
+      AND s.ticker = h.ticker
+      AND s.year = f.year
+      AND s.quarter = f.quarter
+      AND s.quarter_end_price <> 0
+      AND f.quarter = %s
+      AND f.year = %s
+      AND h.share_amount <> 0
+      AND ABS((h.share_value / h.share_amount) - s.quarter_end_price) > 1;
+    """
+    with conn.cursor() as cur:
+        cur.execute(update_sql, (quarter, year))
+        affected_rows = cur.rowcount
+    conn.commit()
+    print(f"Updated share_value for year={year}, quarter={quarter}. Rows affected: {affected_rows}")
+
+
 def update_inst_ownership(conn):
     update_sql = """
     WITH inst_ownership_agg AS (
