@@ -368,12 +368,13 @@ def import_filings_holdings(conn, aum_buckets):
                 conn.rollback()  # Rollback on error to reset transaction state
 
 
-def update_ownership_pct_holdings_and_stocks(conn, tickers=None, shs_outstanding_file=STOCKS_SHS_Q_END_PRICES_FILE):
+def update_ownership_pct_holdings_and_stocks(tickers=None, shs_outstanding_file=STOCKS_SHS_Q_END_PRICES_FILE):
     """
     Recompute and update ownership_pct in holdings based on share_amount / shares_outstanding,
     then update inst_ownership in stocks as sum of updated ownership_pct.
     If ticker is provided, only update data for that ticker.
     """
+    conn = get_db_connection()
 
     df_shares = pd.read_csv(shs_outstanding_file, dtype=str)
     df_shares['quarter'] = df_shares['quarter'].str.extract(r'Q([1-4])').astype(int)
@@ -595,7 +596,7 @@ def main():
         # fix ownership pct for ticker
         # print("Starting update_ownership_pct_holdings_and_stocks...")
         # start_time = time.time()
-        # update_ownership_pct_holdings_and_stocks(conn, tickers=['AAPL'])
+        # update_ownership_pct_holdings_and_stocks(tickers=['AAPL'])
         # conn.commit()
         # print(f"Update completed in {time.time() - start_time:.2f} seconds.")
     except Exception as e:
