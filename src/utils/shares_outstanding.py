@@ -570,6 +570,105 @@ def check_duplicate_rows_shs_file(shares_df):
         print(duplicates)
 
 
+
+
+import zipfile
+import os
+import csv
+from multiprocessing import Pool, cpu_count
+import json
+
+def deduce_quarter(fp, prev_fp):
+    if fp == "FY":
+        if prev_fp == "Q1":
+            return "Q2"
+        if prev_fp == "Q2":
+            return "Q3"
+        if prev_fp == "Q3":
+            return "Q4"
+        if prev_fp == "Q4":
+            return "Q1"
+    return fp
+
+def process_file(args):
+    filepath, cik_to_ticker, filter_year, filter_quarter = args
+    results_dict = {}  # key: (ticker, year, quarter), value: outstanding_shares
+    with open(filepath, 'r') as f:
+        data = json.load(f)
+        cik = str(data.get("cik"))
+        ticker = cik_to_ticker.get(cik)
+        if not ticker:
+            return []
+        shares_data = data.get("facts", {}).get("dei", {}).get("EntityCommonStockSharesOutstanding", {}).get("units", {}).get("shares", [])
+        prev_fp = None
+        for entry in shares_data:
+            year = entry.get("fy")
+            fp = entry.get("fp")
+            quarter = deduce_quarter(fp, prev_fp)
+            shares = entry.get("val")
+            prev_fp = quarter
+
+            if (year is not None and quarter and shares is not None and
+                    (filter_year is None or year == filter_year) and
+                    (filter_quarter is None or quarter == filter_quarter)):
+
+                key = (ticker, year, quarter)
+                results_dict[key] = shares   # overwrite, keep last
+
+    # Convert dictionary to list of tuples for return
+    return [(ticker, year, quarter, shares) for (ticker, year, quarter), shares in results_dict.items()]
+
+
+def extract_outstanding_shares_parallel_process(folder_path, cik_to_ticker, output_csv, filter_year=None, filter_quarter=None):
+    filepaths = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith('.json')]
+
+    args = [(fp, cik_to_ticker, filter_year, filter_quarter) for fp in filepaths]
+
+    # Load existing entries to avoid duplicates
+    existing_entries = set()
+    if os.path.exists(output_csv):
+        with open(output_csv, 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                existing_entries.add((row["ticker"], int(row["year"]), row["quarter"]))
+
+    write_header = not os.path.exists(output_csv)
+
+    with Pool(processes=cpu_count()) as pool, open(output_csv, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if write_header:
+            writer.writerow(["ticker", "year", "quarter", "outstanding_shares"])
+
+        for result_list in pool.imap_unordered(process_file, args):
+            for row in result_list:
+                key = (row[0], row[1], row[2]) # ticker, year, quarter
+                if key not in existing_entries:
+                    writer.writerow(row)
+                    existing_entries.add(row)
+
+
+def create_filtered_zip(original_zip_path, filtered_zip_path):
+    with zipfile.ZipFile(original_zip_path, 'r') as original_zip, \
+            zipfile.ZipFile(filtered_zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as filtered_zip:
+
+        for file_info in original_zip.infolist():
+            filename = file_info.filename
+            # We expect filenames like 'CIK00001750.json'
+            if not filename.lower().endswith('.json'):
+                continue
+
+            # Extract CIK from filename: Remove prefix 'CIK' and suffix '.json', then strip leading zeros
+            if filename.startswith('CIK') and filename.endswith('.json'):
+                cik_str = filename[3:-5]  # from after 'CIK' up to before '.json'
+                cik_str = cik_str.lstrip('0') or '0'  # ensure '0' if all zeros
+
+                # Check if cik is in cik_to_ticker dict keys (strings)
+                if cik_str in cik_to_ticker:
+                    # Copy this file to the filtered zip
+                    with original_zip.open(file_info) as source_file:
+                        filtered_zip.writestr(file_info, source_file.read())
+
+
 def main():
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
     tickers = ['STLA', 'AAPL', 'TSLA', 'TTD']
