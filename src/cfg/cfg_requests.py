@@ -15,3 +15,10 @@ def limited_get(url):
     resp = session.get(url, timeout=1800)
     resp.raise_for_status()
     return resp
+
+@sleep_and_retry
+@limits(calls=1, period=ONE_SECOND)
+def limited_get_one_per_sec(url):
+    resp = session.get(url, timeout=1800)
+    resp.raise_for_status()
+    return resp
