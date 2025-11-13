@@ -207,3 +207,19 @@ def get_quarter_end_price(ticker, year, quarter):
     if price is None:
         print(f"No data found for ticker={ticker}, year={year}, quarter={quarter}")
     return price
+
+
+def tickers_only_year_quarter (csv_path, year, quarter):
+    df = pd.read_csv(csv_path)
+
+    # Filter non-null outstanding shares for the specified year
+    df_year = df[(df['year'] == year) & (df['outstanding_shares'].notnull())]
+
+    # Group by ticker and collect all quarters reported in that year
+    quarters_per_ticker = df_year.groupby('ticker')['quarter'].apply(set)
+
+    # Select tickers whose quarters set exactly matches the single specified quarter
+    tickers_filtered = [ticker for ticker, quarters in quarters_per_ticker.items()
+                        if quarters == {quarter}]
+
+    return tickers_filtered
