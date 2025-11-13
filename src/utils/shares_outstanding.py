@@ -2,18 +2,19 @@ import json
 import os
 import re
 import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 from datetime import date, timedelta, datetime
 
 import pandas as pd
 import requests
 from lxml import etree
 
-from cfg.cfg_requests import limited_get
+from cfg.cfg_requests import limited_get, limited_get_one_per_sec
 from init_setup.ticker_cusip_data import ticker_to_cik, cik_to_ticker
 from utils.date_util import get_year_and_quarter
 from utils.filings_util import get_prev_quarter
 from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR, HEADERS
-from utils.ticker_util import get_prices_for_all_quarters, has_q_end_price
+from utils.ticker_util import get_prices_for_all_quarters, has_q_end_price, tickers_only_year_quarter
 
 STANDARD_MEMBERS = {'CommonStockMember', 'CommonClassAMember'}
 EXCLUDED_MEMBERS = {'CommonClassBMember'}
@@ -667,6 +668,71 @@ def create_filtered_zip(original_zip_path, filtered_zip_path):
                     # Copy this file to the filtered zip
                     with original_zip.open(file_info) as source_file:
                         filtered_zip.writestr(file_info, source_file.read())
+
+
+
+def import_shares_outstanding_alphaquery():
+    tickers = tickers_only_year_quarter(STOCKS_SHS_Q_END_PRICES_FILE, 2025, 'Q1')
+
+    # gradually populate tickers_not_found
+    tickers_not_found = []
+    tickers_filtered = [t for t in tickers if t not in tickers_not_found]
+
+    for ticker in tickers_filtered[:5]:
+        data = scrape_alphaquery_shares_outstanding(ticker)
+        if data is not None:
+            data = convert_to_number(data)
+            print(f"{ticker},2025,Q3,{data},")
+        else:
+            print(f"{ticker} not found")
+
+
+def scrape_alphaquery_shares_outstanding(ticker="BABA"):
+    url = f"https://www.alphaquery.com/stock/{ticker}/profile-key-metrics"
+    try:
+        response = limited_get_one_per_sec(url)
+        response.raise_for_status()  # raises HTTPError for 4xx/5xx
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            # Return None if page not found
+            return None
+        else:
+            # Re-raise other HTTP errors if you want to handle separately
+            raise
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    tables = soup.find_all("table")
+    for table in tables:
+        for row in table.find_all("tr"):
+            cols = row.find_all("td")
+            if len(cols) == 2 and "Common Shares Outstanding" in cols[0].text:
+                shares_outstanding = cols[1].text.strip()
+                return shares_outstanding
+
+    print(f"Common Shares Outstanding not found in any table for {ticker}")
+    return None
+
+
+def convert_to_number(value_str):
+    """
+    Convert shorthand numbers with suffixes 'M', 'B', 'K' to integer.
+    E.g. '43.97M' -> 43970000, '15.76B' -> 15760000000
+    Returns None if input is None or empty.
+    """
+    if not value_str:
+        return None
+    value_str = value_str.strip().upper()
+    multipliers = {'K': 10**3, 'M': 10**6, 'B': 10**9, 'T': 10**12}
+    try:
+        if value_str[-1] in multipliers:
+            number = float(value_str[:-1])
+            return int(number * multipliers[value_str[-1]])
+        else:
+            # No suffix, convert directly
+            return int(float(value_str))
+    except (ValueError, IndexError):
+        return None
 
 
 def main():
