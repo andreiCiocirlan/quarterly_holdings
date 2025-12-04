@@ -432,7 +432,6 @@ def update_ownership_pct_holdings_and_stocks(tickers=None, shs_outstanding_file=
             key = (tkr, year, quarter)
             total_shares = shares_dict.get(key)
             if total_shares is None or total_shares == 0:
-                print(f"Warning: Missing or zero shares outstanding for {key}")
                 ownership_pct = 0.0
             else:
                 ownership_pct = (share_amount / total_shares) * 100
