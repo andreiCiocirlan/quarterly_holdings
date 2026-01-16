@@ -6,8 +6,8 @@ import pandas as pd
 from utils.data_loader import load_cik_to_filer_and_aum, filter_cik_by_aum
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
-DATA_SOURCES_DIR = os.path.join(DATA_DIR, 'sources')
+DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
+DATA_SOURCES_DIR = os.path.join(PROJECT_ROOT, 'data', 'sources')
 
 NASDAQ_FILE_PATH = os.path.join(DATA_SOURCES_DIR, 'nasdaq_listings_full.csv')
 NYSE_FILE_PATH = os.path.join(DATA_SOURCES_DIR, 'nyse_listings_full.csv')
