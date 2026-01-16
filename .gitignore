@@ -1,5 +1,2 @@
 .idea/
-data/final/
-data/parsed/
-data/submissions/
 docker-entrypoint-initdb.d
