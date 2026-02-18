@@ -140,7 +140,7 @@ def load_shs_and_quarter_end_price(csv_file, tickers=None):
     return df[['ticker', 'year', 'quarter', 'shares_outstanding', 'quarter_end_price']]
 
 
-def load_stocks_no_inst_ownership(year, quarter):
+def load_stocks_no_inst_ownership(year : str, quarter : str):
     query = """
     SELECT ticker
     FROM stocks
@@ -151,7 +151,8 @@ def load_stocks_no_inst_ownership(year, quarter):
     """
     conn = get_db_connection()
 
-    params = [year, quarter]
+    q_num = quarter[1:] if quarter.startswith('Q') else quarter
+    params = [year, q_num]
     with conn.cursor() as cur:
         cur.execute(query, params)
         rows = cur.fetchall()
