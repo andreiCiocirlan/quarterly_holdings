@@ -1,5 +1,5 @@
 from utils.downloader import download_filing_to_csv
-from utils.filings_util import generate_13f_and_add_extra_cols, latest_13f_ciks_and_accessions
+from utils.filings_util import generate_13f_and_add_extra_cols, latest_13f_ciks
 from utils.mappings import CIK_TO_FILER
 
 
@@ -41,7 +41,7 @@ def main():
 
 
     # STEP 6 : check if any new 13f was filed
-    ciks, accessions = latest_13f_ciks_and_accessions(CIK_TO_FILER.keys())
+    ciks, accessions = latest_13f_ciks(CIK_TO_FILER.keys())
     found_ciks = ciks
     print(found_ciks)
     found_ciks = ['1094749']

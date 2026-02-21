@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 from cfg.cfg_requests import limited_get
 from utils.date_util import get_year_and_quarter
-from utils.filings_util import delete_stale_13f_raw, delete_final_13f_by_accession, latest_13f_ciks_and_accessions
+from utils.filings_util import delete_stale_13f_raw, delete_final_13f_by_accession, latest_13f_ciks
 from utils.mappings import CIK_TO_PARSED_13F_DIR, SUBMISSIONS_FILERS_DIR, CIK_TO_FINAL_DIR, CIK_TO_ACCESSIONS
 from utils.parser import parse_holdings
 
@@ -192,9 +192,11 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
     if latest_metadata is None:
         latest_metadata = latest_filing_metadata(cik, latest_n_filings, skip_quarters_years, include_quarters_years, use_requests)
     output_path = CIK_TO_PARSED_13F_DIR.get(cik)
+    processed_accessions = []
     for accession_number, report_date, primary_doc, amendment_type in latest_metadata:
         accession_number_nodash = accession_number.replace('-', '')
-        csv_file_path = os.path.join(output_path, cik, f"{accession_number_nodash.lstrip('0')}.csv")
+        processed_accession = accession_number_nodash.lstrip('0')
+        csv_file_path = os.path.join(output_path, cik, f"{processed_accession}.csv")
         if os.path.exists(csv_file_path):
             continue  # Skip downloading this filing
 
@@ -208,7 +210,7 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
         parsed_data = parse_holdings(xml_data, accession_number_nodash, report_date)
 
         # save to csv
-        file_path = f"{output_path}/{cik}/{accession_number_nodash.lstrip('0')}.csv"
+        file_path = f"{output_path}/{cik}/{processed_accession}.csv"
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)  # Create directory if missing
         parsed_data.to_csv(file_path, index=False)
@@ -218,6 +220,10 @@ def download_filing_to_csv(cik: str, latest_n_filings=1, skip_quarters_years=Non
         else:
             print(f"Saved {report_date} {form_type} file: {file_path}")
 
+        processed_accessions.append(processed_accession)
+
+    return processed_accessions
+
 
 def latest_filings_download(prev_found_ciks=None, latest_n_filings=None, include_quarters_years=None, use_requests=None):
     if prev_found_ciks is None:
@@ -226,7 +232,7 @@ def latest_filings_download(prev_found_ciks=None, latest_n_filings=None, include
     else:
         prev_found_ciks_set = set(prev_found_ciks)
 
-    ciks, accessions = latest_13f_ciks_and_accessions(CIK_TO_FINAL_DIR.keys())
+    ciks = latest_13f_ciks(CIK_TO_FINAL_DIR.keys())
     found_ciks = ciks
     ciks_imported = list(set(found_ciks) - prev_found_ciks_set)
     print(f"Importing 13F-HR data for ciks: {ciks_imported}")
