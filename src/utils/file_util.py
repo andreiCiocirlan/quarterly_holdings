@@ -1,4 +1,5 @@
 import csv
+import glob
 import os
 import re
 from collections import defaultdict
@@ -7,7 +8,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from init_setup.ticker_cusip_data import cusip_set, cusip_to_ticker
+from init_setup.ticker_cusip_data import cusip_set, cusip_to_ticker, cik_to_ticker
 from utils.mappings import BASE_DIR_DATA_PARSE, STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL
 
 
@@ -177,3 +178,25 @@ def count_rows_in_csv(file_path):
         reader = csv.reader(f)
         row_count = sum(1 for row in reader) - 1  # subtract header
     return row_count
+
+
+def extract_accessions_for_quarter(year="2025", quarter="Q4"):
+    # Only process year/quarter subdirectories
+    q4_path_pattern = os.path.join(BASE_DIR_FINAL, year, quarter)
+
+    accessions = []
+    if not os.path.exists(q4_path_pattern):
+        print(f"ℹ️  No 2025/Q4 directory: {q4_path_pattern}")
+        return accessions
+
+    # Find all CSV files recursively in year/quarter/*
+    csv_files = glob.glob(os.path.join(q4_path_pattern, "**/*.csv"), recursive=True)
+
+    for file_path in csv_files:
+        # Extract accession: split by "-" and take 2nd part
+        filename = os.path.basename(file_path)
+        accession = filename.split("-", 1)[1].replace(".csv", "")
+        accessions.append(accession)
+
+    print(f"Extracted {len(accessions)} accession numbers")
+    return list(cik_to_ticker.keys()), sorted(accessions)
