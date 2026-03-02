@@ -1,19 +1,16 @@
-import json
-import os
 import re
 import xml.etree.ElementTree as ET
-from bs4 import BeautifulSoup
 from datetime import date, timedelta, datetime
 
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 from lxml import etree
 
 from cfg.cfg_requests import limited_get, limited_get_one_per_sec
 from init_setup.ticker_cusip_data import ticker_to_cik, cik_to_ticker
 from utils.date_util import get_year_and_quarter
-from utils.filings_util import get_prev_quarter
-from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR, HEADERS
+from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR
 from utils.ticker_util import get_prices_for_all_quarters, has_q_end_price, tickers_only_year_quarter
 
 STANDARD_MEMBERS = {'CommonStockMember', 'CommonClassAMember'}
