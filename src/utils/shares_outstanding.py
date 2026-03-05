@@ -530,7 +530,7 @@ def get_latest_10q_reports(submission_json_path, latest_n=1, form_type="10-Q", e
 
 def update_multiple_years_quarters(year_quarter_list=None):
     if year_quarter_list is None:
-        year_quarter_list = [['2025', 'Q2']]
+        year_quarter_list = [['2025', 'Q4']]
 
     for year, quarter in year_quarter_list:
         update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
