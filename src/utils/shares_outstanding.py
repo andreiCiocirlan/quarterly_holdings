@@ -413,7 +413,12 @@ def shs_outstanding_for_ticker(ticker, df, lookback=4, year_quarter=None, xml_ur
             continue
 
         xml_content = response.content
-        shares, reported_date = extract_shs_outstanding_and_date(xml_content, ticker)
+        try:
+            shares, reported_date = extract_shs_outstanding_and_date(xml_content, ticker)
+        except ET.ParseError as e:
+            print(f"Failed to parse XML for {xml_url}: {e}")
+            continue
+
         if shares and reported_date:
             year, quarter = get_year_and_quarter(reported_date)
             if year_quarter is not None and f"{year}_{quarter}" != year_quarter:
