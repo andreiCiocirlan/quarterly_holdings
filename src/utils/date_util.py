@@ -1,5 +1,14 @@
 from datetime import datetime
 
+def is_valid_report_date(date_str):
+    """Returns True if date_str parses successfully with get_year_and_quarter formats."""
+    if not date_str or date_str in ['.', 'null', '', 'None']:  # Quick reject common invalids
+        return False
+    try:
+        get_year_and_quarter(date_str)  # Reuse your existing validator
+        return True
+    except ValueError:
+        return False
 
 def get_year_and_quarter(date_str):
     date_formats = ["%Y-%m-%d", "%Y%m%d"]
