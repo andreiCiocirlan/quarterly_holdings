@@ -543,12 +543,16 @@ def update_multiple_years_quarters(year_quarter_list=None):
         update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
 
 
-def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, form_type=None):
+def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, form_type=None, cik_tickers_to_process=None):
     if form_type is None:
         form_type = '10-Q'
 
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
-    for cik, ticker in cik_to_ticker.items():
+
+    # Use provided dict or fall back to full cik_to_ticker
+    cik_to_ticker_dict = cik_tickers_to_process or cik_to_ticker
+
+    for cik, ticker in cik_to_ticker_dict.items():
         filename = f'CIK{str(int(cik)).zfill(10)}.json'
         path = os.path.join(SUBMISSIONS_STOCKS_DIR, filename)
         result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter, form_type=form_type)
