@@ -9,7 +9,7 @@ from lxml import etree
 
 from cfg.cfg_requests import limited_get, limited_get_one_per_sec
 from init_setup.ticker_cusip_data import ticker_to_cik, cik_to_ticker
-from utils.date_util import get_year_and_quarter
+from utils.date_util import get_year_and_quarter, is_valid_report_date
 from utils.mappings import STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, SUBMISSIONS_STOCKS_DIR
 from utils.ticker_util import get_prices_for_all_quarters, has_q_end_price, tickers_only_year_quarter
 
@@ -515,6 +515,8 @@ def get_latest_10q_reports(submission_json_path, latest_n=1, form_type="10-Q", e
         if form == form_type_allowed:
             acceptance_dt = datetime.strptime(acceptance_dates[i], "%Y-%m-%dT%H:%M:%S.%fZ")
             report_date = report_dates[i]
+            if not is_valid_report_date(report_date):
+                continue
             year, quarter = get_year_and_quarter(report_date)
             if expected_year is not None and expected_quarter is not None:
                 if year == expected_year and quarter == expected_quarter:
