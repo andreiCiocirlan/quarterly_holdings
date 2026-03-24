@@ -384,8 +384,8 @@ def shs_outstanding_for_ticker(ticker, df, lookback=4, year_quarter=None, xml_ur
             ten_k_urls = []
 
         if form_type != '10-K':
-            # Fetch 10-Q filings for last n quarters
-            ten_q_urls = get_latest_10qk_urls(cik, lookback=lookback, form_type="10-Q")
+            # Fetch 10-Q / 40-F / 20-F filings for last n quarters
+            ten_q_urls = get_latest_10qk_urls(cik, lookback=lookback, form_type=form_type)
         else:
             ten_q_urls = []
 
