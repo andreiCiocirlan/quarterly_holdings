@@ -8,7 +8,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from init_setup.ticker_cusip_data import cusip_set, cusip_to_ticker, cik_to_ticker
+from init_setup.ticker_cusip_data import cusip_set, cusip_to_ticker
 from utils.mappings import BASE_DIR_DATA_PARSE, STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, CIK_TO_ACCESSIONS
 
 
