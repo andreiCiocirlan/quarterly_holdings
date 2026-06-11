@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from init_setup.ticker_cusip_data import cusip_set, cusip_to_ticker, cik_to_ticker
-from utils.mappings import BASE_DIR_DATA_PARSE, STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL
+from utils.mappings import BASE_DIR_DATA_PARSE, STOCKS_SHS_Q_END_PRICES_FILE, BASE_DIR_FINAL, CIK_TO_ACCESSIONS
 
 
 def find_duplicates_by_name():
@@ -182,21 +182,29 @@ def count_rows_in_csv(file_path):
 
 def extract_accessions_for_quarter(year="2025", quarter="Q4"):
     # Only process year/quarter subdirectories
-    q4_path_pattern = os.path.join(BASE_DIR_FINAL, year, quarter)
+    quarter_path = os.path.join(BASE_DIR_FINAL, year, quarter)
+
+    if not os.path.exists(quarter_path):
+        print(f"ℹ️ No directory found: {quarter_path}")
+        return set(), []
 
     accessions = []
-    if not os.path.exists(q4_path_pattern):
-        print(f"ℹ️  No 2025/Q4 directory: {q4_path_pattern}")
-        return accessions
 
-    # Find all CSV files recursively in year/quarter/*
-    csv_files = glob.glob(os.path.join(q4_path_pattern, "**/*.csv"), recursive=True)
+    csv_files = glob.glob(os.path.join(quarter_path, "**", "*.csv"), recursive=True)
 
     for file_path in csv_files:
-        # Extract accession: split by "-" and take 2nd part
         filename = os.path.basename(file_path)
         accession = filename.split("-", 1)[1].replace(".csv", "")
         accessions.append(accession)
 
-    print(f"Extracted {len(accessions)} accession numbers")
-    return list(cik_to_ticker.keys()), sorted(accessions)
+    accession_set = set(accessions)
+
+    ciks = {
+        cik
+        for cik, cik_accessions in CIK_TO_ACCESSIONS.items()
+        if accession_set.intersection(cik_accessions)
+    }
+
+    print(f"Extracted {len(accessions)} accessions across {len(ciks)} CIKs")
+
+    return ciks, sorted(accessions)
