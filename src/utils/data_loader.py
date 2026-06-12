@@ -33,7 +33,7 @@ def load_cik_to_filer_and_aum(csv_file):
     if not os.path.exists(csv_file):
         return {}
     df = pd.read_csv(csv_file, dtype=str, usecols=['cik', 'formatted_name', 'holdings_value', 'last_reported'])
-    valid_years = ('2024', '2025')
+    valid_years = ('2024', '2025', '2026', '2027', '2028')
     df = df[df['last_reported'].str.endswith(valid_years, na=False)]
     df['holdings_billion'] = df['holdings_value'].apply(_parse_holdings_value)
     df = df.dropna(subset=['holdings_billion'])
