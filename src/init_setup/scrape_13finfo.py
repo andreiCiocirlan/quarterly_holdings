@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from utils.mappings import ALL_FILERS_CSV
+from utils.mappings import ALL_FILERS_CSV, ALL_FILERS2_CSV
 
 BASE_URL = "https://13f.info"
 LETTERS = '0abcdefghijklmnopqrstuvwxyz'
@@ -131,7 +131,7 @@ def save_managers_table_with_links(letter, output_csv=ALL_FILERS_CSV):
     # Filter for minimum AUM of $1B or more
     df_filtered = df[df['holdings_value'].str.endswith(('B', 'T'), na=False)]
 
-    valid_years = ('2024', '2025')
+    valid_years = ('2026', '2026')
     df_filtered = df_filtered[df_filtered['last_reported'].str.endswith(valid_years, na=False)]
 
     # Add formatted_name and cik columns
@@ -156,12 +156,46 @@ def save_managers_table_with_links(letter, output_csv=ALL_FILERS_CSV):
         df_filtered.to_csv(output_csv, mode='w', header=True, index=False)
         print(f"Created {output_csv} with {len(df_filtered)} rows")
 
+def append_new_filers(
+        target_file: str = "all_filers.csv",
+        source_file: str = "all_filers2.csv"
+) -> int:
+    """
+    Append rows from source_file to target_file if their CIK
+    does not already exist in target_file.
+
+    Returns:
+        Number of rows appended.
+    """
+    # Read existing CIKs from target file
+    target_df = pd.read_csv(target_file, usecols=["cik"])
+    existing_ciks = set(target_df["cik"].astype(str))
+
+    # Read source file
+    source_df = pd.read_csv(source_file)
+
+    # Filter to only new CIKs
+    new_rows = source_df[
+        ~source_df["cik"].astype(str).isin(existing_ciks)
+    ]
+
+    # Append new rows
+    if not new_rows.empty:
+        new_rows.to_csv(
+            target_file,
+            mode="a",
+            header=False,
+            index=False
+        )
+
+    return len(new_rows)
+
 
 def main():
     for letter in LETTERS:
         save_managers_table_with_links(letter, output_csv=ALL_FILERS_CSV)
 
-
+    # append_new_filers(target_file=ALL_FILERS_CSV, source_file=ALL_FILERS2_CSV)
     # update_filings()
 
 
