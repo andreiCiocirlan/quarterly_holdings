@@ -38,7 +38,7 @@ def index():
         FROM filers f
         LEFT JOIN latest_filings lf ON f.cik = lf.cik AND lf.rn = 1
         ORDER BY lf.holdings_value DESC NULLS LAST
-        LIMIT 250;
+        LIMIT 2000;
     ''')
     filers_raw = cur.fetchall()
     cur.close()
