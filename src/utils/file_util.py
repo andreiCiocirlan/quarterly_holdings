@@ -208,3 +208,30 @@ def extract_accessions_for_quarter(year="2025", quarter="Q4"):
     print(f"Extracted {len(accessions)} accessions across {len(ciks)} CIKs")
 
     return ciks, sorted(accessions)
+
+from pathlib import PurePath
+
+def extract_cik_and_accessions(log_file: str):
+    accessions = []
+    ciks = []
+
+    with open(log_file, "r", encoding="utf-8") as f:
+        for line in f:
+            if not line.startswith("Saved"):
+                continue
+
+            # Everything after "file:"
+            path_str = line.split("file:", 1)[1].strip()
+
+            # Normalize slashes so it works with mixed / and \
+            path_str = path_str.replace("\\", "/")
+
+            parts = PurePath(path_str).parts
+
+            cik = parts[-2]                    # parent folder
+            accession = parts[-1].removesuffix(".csv")
+
+            ciks.append(cik)
+            accessions.append(accession)
+
+    return ciks, accessions
