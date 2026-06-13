@@ -809,3 +809,16 @@ def find_prev_quarter_file(aum_folder: str, filer_name, prev_year, prev_quarter)
     # If multiple matches (e.g., amendments), pick the latest by filename sorting
     matched_files.sort()
     return matched_files[-1]
+
+
+def get_ciks_from_csv(csv_file: str, start_row: int = 2100) -> list[str]:
+    """
+    Return CIKs from csv_file starting at start_row (0-based index).
+    """
+    df = pd.read_csv(csv_file)
+
+    return (
+        df.iloc[start_row:]["cik"]
+        .astype(str)
+        .tolist()
+    )
