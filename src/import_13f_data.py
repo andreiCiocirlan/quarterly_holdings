@@ -336,7 +336,15 @@ def insert_holdings(cur, accession_nr, df):
     query = f"""
         INSERT INTO holdings ({', '.join(columns)})
         VALUES {values_placeholder}
-        ON CONFLICT (accession_nr, ticker) DO NOTHING;
+        ON CONFLICT (accession_nr, ticker)
+        DO UPDATE SET
+        rank = EXCLUDED.rank,
+        share_amount = EXCLUDED.share_amount,
+        share_value = EXCLUDED.share_value,
+        percentage = EXCLUDED.percentage,
+        change_amount = EXCLUDED.change_amount,
+        change_pct = EXCLUDED.change_pct,
+        ownership_pct = EXCLUDED.ownership_pct;
     """
 
     # Flatten data_to_insert list of tuples into a single tuple
