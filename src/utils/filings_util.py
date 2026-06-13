@@ -15,7 +15,7 @@ from utils.date_util import get_year_and_quarter
 from utils.file_util import extract_filername_year_quarter_accession, extract_year_quarter_from_filename
 from utils.mappings import BASE_DIR_FINAL, STOCKS_SHS_Q_END_PRICES_FILE, CIK_TO_PARSED_13F_DIR, \
     CIK_TO_FINAL_DIR, QUARTER_END_PRICE_DICT, BASE_DIR_DATA_PARSE, CIK_TO_FILER, HEADERS, \
-    RAW_PARSED_HOLDINGS_DIRECTORIES, FILER_ACCESSION_METADATA, SUBMISSIONS_FILERS_DIR
+    RAW_PARSED_HOLDINGS_DIRECTORIES, FILER_ACCESSION_METADATA, SUBMISSIONS_FILERS_DIR, TARGET_YEAR, TARGET_QUARTER
 
 
 def make_filer_submission_filename(cik):
@@ -430,6 +430,14 @@ def combine_quarterly_files(folder_path, filer_name, cik):
 
     # Step 2: For each conformed_date, merge and process the DataFrames
     for date, files in files_by_date.items():
+        filed_date = date
+        year = filed_date[:4]
+        month = int(filed_date[4:6])
+        quarter = (month - 1) // 3 + 1
+
+        if year != TARGET_YEAR or f"Q{quarter}" != TARGET_QUARTER:
+            continue
+
         combined_df = pd.concat([pd.read_csv(f, dtype={'CUSIP': str}) for f in files], ignore_index=True)
         combined_df.columns = combined_df.columns.str.lower()  # Standardize column names
 
@@ -463,11 +471,6 @@ def combine_quarterly_files(folder_path, filer_name, cik):
         # --- For naming: pick the latest accession_number (lexically max) or join all
         accessions = set(combined_df['accession_number'])
         accession_nr = max(accessions)
-
-        filed_date = date
-        year = filed_date[:4]
-        month = int(filed_date[4:6])
-        quarter = (month - 1) // 3 + 1
 
         # Save
         aum_folder = CIK_TO_FINAL_DIR.get(cik)
@@ -532,6 +535,9 @@ def add_chg_ownership_columns(cik_to_filer):
                 continue
 
             aum_folder, filer_name, year, quarter = params
+
+            if str(year) != TARGET_YEAR or f"Q{str(quarter).replace('Q','')}" != TARGET_QUARTER:
+                continue
 
             # Filter by filer_name using cik_to_filer dict (or filer_names_set)
             if filer_name not in filer_names_set:
@@ -712,6 +718,10 @@ def add_quarter_end_price(cik_to_filer, base_dir=BASE_DIR_FINAL, threshold=0.5):
             if not any(file.startswith(name) for name in filer_names):
                 continue
 
+            year, quarter = extract_year_quarter_from_filename(file)
+            if year != TARGET_YEAR or quarter != TARGET_QUARTER:
+                continue
+
             file_path = os.path.join(root, file)
             df = pd.read_csv(file_path)
             df['quarter_end_price'] = np.where(
@@ -722,7 +732,6 @@ def add_quarter_end_price(cik_to_filer, base_dir=BASE_DIR_FINAL, threshold=0.5):
 
             prop_below_1 = (df['quarter_end_price'] < 1).mean()
             if prop_below_1 > threshold:
-                year, quarter = extract_year_quarter_from_filename(file)
                 df['quarter_end_price'] = df.apply(lambda row: replace_price(row, year, quarter), axis=1)
                 print(f"replaced with quarter end prices from QUARTER_END_PRICE_DICT: {file_path}")
 
