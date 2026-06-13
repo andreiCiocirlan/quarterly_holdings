@@ -46,6 +46,9 @@ RAW_PARSED_HOLDINGS_DIRECTORIES = [
     RAW_13F_PARSED_HOLDINGS_1B_TO_3B
 ]
 
+TARGET_YEAR = "2026"
+TARGET_QUARTER = "Q1"
+
 
 def _build_cik_to_accession():
     cik_to_accessions = defaultdict(list)
