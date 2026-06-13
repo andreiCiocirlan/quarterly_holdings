@@ -522,6 +522,9 @@ def add_chg_ownership_columns(cik_to_filer):
             if not file.endswith(".csv"):
                 continue
 
+            if not any(file.startswith(name) for name in filer_names_set):
+                continue
+
             full_path = os.path.join(root, file)
 
             params = extract_params_from_path(full_path, file)
