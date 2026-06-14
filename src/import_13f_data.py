@@ -362,7 +362,7 @@ def import_quarterly_file(db_conn, cik, accession_nr, year, quarter, csv_path):
     try:
         with db_conn.cursor() as cur:
             insert_filing(cur, cik, accession_nr, year, quarter, form_type="13F-HR", filing_date=filing_date)
-            # insert_holdings(cur, accession_nr, df)
+            insert_holdings(cur, accession_nr, df)
         db_conn.commit()
     except Exception as e:
         db_conn.rollback()  # Rollback the failed transaction
@@ -528,7 +528,7 @@ def update_db_for_accessions(accessions):
     try:
         import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=12, accessions=accessions)
 
-        # add_filings_holding_count_and_value(conn)
+        add_filings_holding_count_and_value(conn)
         conn.commit()
 
         update_stocks_table(conn)
