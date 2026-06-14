@@ -1,8 +1,10 @@
 import csv
 import glob
 import os
+import re
 import shutil
 import tempfile
+from collections import defaultdict, Counter
 from datetime import datetime
 
 import pandas as pd
@@ -79,13 +81,102 @@ cusip_to_ticker = _get_cusip_to_ticker(filtered_listings)
 cusip_set = _get_cusip_set(cusip_to_ticker)
 
 
+def normalize_issuer_name(name):
+    """
+    Normalize issuer names for matching.
+    """
+    if not name:
+        return ""
+
+    return re.sub(
+        r"[^A-Z0-9]",
+        "",
+        name.upper()
+    )
+
+def build_cusip_to_issuer_map(recent_csv_files):
+    """
+    Build a consensus mapping:
+        CUSIP -> most frequently observed issuer
+    """
+    cusip_issuers = defaultdict(Counter)
+
+    for csv_file in recent_csv_files:
+        try:
+            with open(csv_file, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+
+                for row in reader:
+                    title = row.get('TITLE_OF_CLASS', '').strip().upper()
+
+                    if not (title.startswith('COM') or title == 'COM NEW'):
+                        continue
+
+                    issuer = normalize_issuer_name(row.get('NAME_OF_ISSUER', ''))
+                    cusip = row.get('CUSIP', '').strip()
+
+                    if issuer and cusip:
+                        cusip_issuers[cusip][issuer] += 1
+
+        except Exception as e:
+            print(f"❌ Error building map from {csv_file}: {e}")
+
+    known_cusip_to_issuer = {}
+
+    for cusip, issuer_counts in cusip_issuers.items():
+        issuer, count = issuer_counts.most_common(1)[0]
+        known_cusip_to_issuer[cusip] = issuer
+
+    return known_cusip_to_issuer
+
+
 def update_all_exchange_cusips_from_raw_holdings(cutoff_date="2025-12-31"):
     """
     TWO-PASS approach using YOUR existing _extract_new_common_stock_cusips:
     1. Extract ALL new CUSIPs from every 13F file (modified after cutoff_date 2025-12-31)
     2. Single final update of NASDAQ/NYSE files
     """
-    print("🔍 PASS 1: Extracting new CUSIPs from all 13F files...")
+    print("🔍 PASS 1: Discovering CUSIP ↔ issuer mappings...")
+
+    cutoff_timestamp = datetime.strptime(
+        cutoff_date,
+        "%Y-%m-%d"
+    ).timestamp()
+
+    all_recent_csv_files = []
+
+    for directory in RAW_PARSED_HOLDINGS_DIRECTORIES:
+
+        if not os.path.exists(directory):
+            print(f"⚠️  Skipping {os.path.basename(directory)}")
+            continue
+
+        csv_files = glob.glob(
+            os.path.join(directory, "**/*.csv"),
+            recursive=True
+        )
+
+        recent_csv_files = [
+            f for f in csv_files
+            if os.path.getctime(f) > cutoff_timestamp
+        ]
+
+        all_recent_csv_files.extend(recent_csv_files)
+
+    # ----------------------------------------------------------
+    # PASS 1
+    # ----------------------------------------------------------
+
+    known_cusip_to_issuer = build_cusip_to_issuer_map(
+        all_recent_csv_files
+    )
+
+    print(
+        f"✅ Built mapping for "
+        f"{len(known_cusip_to_issuer):,} unique CUSIPs"
+    )
+
+    print("🔍 PASS 2: Extracting new CUSIPs from all 13F files...")
 
     # STEP 1: Extract ALL new CUSIPs
     all_new_cusips_by_issuer = {}
@@ -107,7 +198,7 @@ def update_all_exchange_cusips_from_raw_holdings(cutoff_date="2025-12-31"):
 
         for csv_file in recent_csv_files:
             try:
-                file_new_cusips = _extract_new_common_stock_cusips(csv_file, known_cusips=cusip_set)
+                file_new_cusips = _extract_new_common_stock_cusips(csv_file, known_cusips=cusip_set, known_cusip_to_issuer=known_cusip_to_issuer)
 
                 # Merge into master dict (deduplicate across files)
                 for issuer, cusips in file_new_cusips.items():
@@ -124,7 +215,7 @@ def update_all_exchange_cusips_from_raw_holdings(cutoff_date="2025-12-31"):
     # Report results
     total_new_cusips = sum(len(cusips) for cusips in all_new_cusips_by_issuer.values())
     print("\n" + "="*60)
-    print(f"✅ PASS 1 COMPLETE")
+    print(f"✅ PASS 2 COMPLETE")
     print(f"   Files scanned: {total_files_processed}")
     print(f"   Issuers with new CUSIPs: {len(all_new_cusips_by_issuer)}")
     print(f"   Total new CUSIPs: {total_new_cusips}")
@@ -135,7 +226,7 @@ def update_all_exchange_cusips_from_raw_holdings(cutoff_date="2025-12-31"):
         return
 
     # STEP 2: Single final update using YOUR _update_exchange_file
-    print("\n🔧 PASS 2: Final NASDAQ/NYSE update...")
+    print("\n🔧 PASS 3: Final NASDAQ/NYSE update...")
     nasdaq_updates = _update_exchange_file(all_new_cusips_by_issuer, NASDAQ_FILE_PATH)
     nyse_updates = _update_exchange_file(all_new_cusips_by_issuer, NYSE_FILE_PATH)
 
@@ -143,23 +234,43 @@ def update_all_exchange_cusips_from_raw_holdings(cutoff_date="2025-12-31"):
     print(f"NASDAQ: {nasdaq_updates} rows | NYSE: {nyse_updates} rows")
 
 
-def _extract_new_common_stock_cusips(f_path_13f, known_cusips):
+def _extract_new_common_stock_cusips(f_path_13f, known_cusips, known_cusip_to_issuer):
     """Extract CUSIPs for common stock (COM/COM NEW) from 13F for existing issuers."""
-    existing_issuers = set(filtered_listings['name'].astype(str).str.strip().str.upper())
+    existing_issuers = set(filtered_listings['name'].astype(str).apply(normalize_issuer_name))
     new_cusips_by_issuer = {}
 
     with open(f_path_13f, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             title = row.get('TITLE_OF_CLASS', '').strip().upper()
-            issuer = row.get('NAME_OF_ISSUER', '').strip().upper()
+            issuer = normalize_issuer_name(row.get('NAME_OF_ISSUER', ''))
             cusip = row.get('CUSIP', '').strip()
 
             if not (title.startswith('COM') or title == 'COM NEW'):
                 continue
 
-            if issuer in existing_issuers and cusip and cusip not in known_cusips:
-                new_cusips_by_issuer.setdefault(issuer, set()).add(cusip)
+
+            if not issuer or not cusip:
+                continue
+
+            # ----------------------------------------------------
+            # Reject suspicious rows
+            # ----------------------------------------------------
+            canonical_issuer = known_cusip_to_issuer.get(cusip)
+
+            if canonical_issuer and canonical_issuer != issuer:
+                # Example:
+                # CUSIP 00BP6KMJ1 known as NOVO NORDISK AS
+                # row says IONQ INC -> skip
+                continue
+
+            if issuer not in existing_issuers:
+                continue
+
+            if cusip in known_cusips:
+                continue
+
+            new_cusips_by_issuer.setdefault(issuer, set()).add(cusip)
 
     return new_cusips_by_issuer
 
@@ -173,6 +284,10 @@ def _update_exchange_file(new_cusips_by_issuer, exchange_path):
         if col in exchange_df.columns:
             exchange_df[col] = pd.to_numeric(exchange_df[col], errors='coerce').astype('Int64')
 
+    # Normalize issuer names in exchange file (CRITICAL FIX)
+    exchange_df = exchange_df.copy()
+    exchange_df['norm_name'] = exchange_df['name'].fillna('').apply(normalize_issuer_name)
+
     # Filter: tradeable + known tickers
     approved_mask = (
             exchange_df['category'].apply(_is_tradeable_stock) &
@@ -182,16 +297,29 @@ def _update_exchange_file(new_cusips_by_issuer, exchange_path):
 
     updates_made = 0
     for issuer, new_cusips in new_cusips_by_issuer.items():
-        matches = approved_df[approved_df['name'].str.strip().str.upper() == issuer]
+        # IMPORTANT: issuer must already be normalized in PASS 2
+        matches = approved_df[approved_df['norm_name'] == issuer]
+
         for idx in matches.index:
-            ticker = approved_df.at[idx, 'ticker']
+            ticker = exchange_df.at[idx, 'ticker']
+
             if ticker not in ticker_to_cik:
                 continue
 
-            current = set(str(exchange_df.at[idx, 'cusip']).strip().split())
-            exchange_df.at[idx, 'cusip'] = ' '.join(sorted(current | new_cusips))
-            updates_made += 1
-            print(f"✅ {issuer} ({ticker}): +{len(new_cusips)} CUSIPs")
+            existing = exchange_df.at[idx, 'cusip']
+
+            if pd.isna(existing):
+                current = set()
+            else:
+                current = set(str(existing).split())
+
+            updated = current | set(new_cusips)
+
+            # Only update if something actually changed
+            if updated != current:
+                exchange_df.at[idx, 'cusip'] = ' '.join(sorted(updated))
+                updates_made += 1
+                print(f"✅ {issuer} ({ticker}): +{len(set(new_cusips - current))} CUSIPs")
 
     if updates_made:
         _atomic_csv_write(exchange_df, exchange_path)
