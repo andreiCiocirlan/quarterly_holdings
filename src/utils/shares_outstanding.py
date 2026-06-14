@@ -543,7 +543,7 @@ def update_multiple_years_quarters(year_quarter_list=None):
         update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
 
 
-def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, form_type=None, cik_tickers_to_process=None):
+def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, lookback=6,form_type=None, cik_tickers_to_process=None):
     if form_type is None:
         form_type = '10-Q'
 
@@ -558,7 +558,7 @@ def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, form_type=None
         result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter, form_type=form_type)
         if result and not has_q_end_price(ticker, year, quarter):
             print(f'importing {year}, {quarter} for {ticker} shares outstanding')
-            df = shs_outstanding_for_ticker(ticker, df=df, year_quarter=f"{year}_{quarter}", lookback=1, form_type=form_type)
+            df = shs_outstanding_for_ticker(ticker, df=df, year_quarter=f"{year}_{quarter}", lookback=lookback, form_type=form_type)
 
 
     df['outstanding_shares'] = pd.to_numeric(df['outstanding_shares'], errors='coerce').astype('Int64')
