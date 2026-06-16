@@ -478,6 +478,10 @@ def add_quarter_end_price_to_sh_outstanding_file(year_quarter_list):
     # Get price DataFrame for all requested quarters/tickers
     price_df = get_prices_for_all_quarters(BASE_DIR_FINAL, year_quarter_list, outstanding_shares_tickers)
 
+    if price_df.empty:
+        print("No quarter-end prices found.")
+        return
+
     # For rows to update, merge price_df to get new quarter_end_price
     df_update = df[mask].drop(columns=['quarter_end_price'], errors='ignore').merge(
         price_df, on=['ticker', 'year', 'quarter'], how='left')
