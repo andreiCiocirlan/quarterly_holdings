@@ -235,3 +235,18 @@ def extract_cik_and_accessions(log_file: str):
             accessions.append(accession)
 
     return ciks, accessions
+
+
+def extract_tickers_for_period(year, quarter):
+    df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
+
+    return (
+        df.loc[
+            (df['year'].astype(str) == str(year)) &
+            (df['quarter'].astype(str) == str(quarter)),
+            'ticker'
+        ]
+        .dropna()
+        .astype(str)
+        .tolist()
+    )
