@@ -557,12 +557,13 @@ def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, lookback=6,for
     cik_to_ticker_dict = cik_tickers_to_process or cik_to_ticker
 
     for cik, ticker in cik_to_ticker_dict.items():
-        filename = f'CIK{str(int(cik)).zfill(10)}.json'
-        path = os.path.join(SUBMISSIONS_STOCKS_DIR, filename)
-        result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter, form_type=form_type)
-        if result and not has_q_end_price(ticker, year, quarter):
-            print(f'importing {year}, {quarter} for {ticker} shares outstanding')
-            df = shs_outstanding_for_ticker(ticker, df=df, year_quarter=f"{year}_{quarter}", lookback=lookback, form_type=form_type)
+        if not has_q_end_price(ticker, year, quarter):
+            filename = f'CIK{str(int(cik)).zfill(10)}.json'
+            path = os.path.join(SUBMISSIONS_STOCKS_DIR, filename)
+            result = get_latest_10q_reports(path, expected_year=year, expected_quarter=quarter, form_type=form_type)
+            if result:
+                print(f'importing {year}, {quarter} for {ticker} shares outstanding')
+                df = shs_outstanding_for_ticker(ticker, df=df, year_quarter=f"{year}_{quarter}", lookback=lookback, form_type=form_type)
 
 
     df['outstanding_shares'] = pd.to_numeric(df['outstanding_shares'], errors='coerce').astype('Int64')
