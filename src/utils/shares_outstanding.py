@@ -547,7 +547,7 @@ def update_multiple_years_quarters(year_quarter_list=None):
         update_year_quarter_stocks_shs_and_q_end_price(year=year, quarter=quarter)
 
 
-def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, lookback=6,form_type=None, cik_tickers_to_process=None):
+def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, lookback=1,form_type=None, cik_tickers_to_process=None):
     if form_type is None:
         form_type = '10-Q'
 
