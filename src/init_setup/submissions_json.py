@@ -2,17 +2,7 @@ import os
 import zipfile
 
 from init_setup.ticker_cusip_data import cik_to_ticker
-from utils.mappings import SUBMISSIONS_FILERS_DIR, CIK_TO_FILER_AND_AUM, SUBMISSIONS_STOCKS_DIR, CIK_TO_FILER
-
-# Your set of CIKs (strings, zero-padded 10 digits)
-ciks = CIK_TO_FILER_AND_AUM.keys()
-zip_path = r"C:\Users\andre\Downloads\submissions.zip"
-
-# Convert CIKs to expected filenames inside the ZIP
-target_filenames = {f"CIK{str(int(cik)).zfill(10)}.json" for cik in ciks}
-
-# Create output directory if it doesn't exist
-os.makedirs(SUBMISSIONS_FILERS_DIR, exist_ok=True)
+from utils.mappings import SUBMISSIONS_FILERS_DIR, SUBMISSIONS_STOCKS_DIR, CIK_TO_FILER
 
 
 def extract_cik_jsons(ciks, zip_path, output_dir):
