@@ -1,8 +1,9 @@
 import os
 import zipfile
 
+from cfg.cfg_requests import limited_get
 from init_setup.ticker_cusip_data import cik_to_ticker
-from utils.mappings import SUBMISSIONS_FILERS_DIR, SUBMISSIONS_STOCKS_DIR, CIK_TO_FILER
+from utils.mappings import SUBMISSIONS_FILERS_DIR, SUBMISSIONS_STOCKS_DIR, CIK_TO_FILER, HEADERS
 
 
 def extract_cik_jsons(ciks, zip_path, output_dir):
@@ -50,6 +51,25 @@ def extract_cik_jsons(ciks, zip_path, output_dir):
             print("\nAll requested CIK files were found.")
 
     return (saved_files, missing_files)
+
+
+def download_submissions_and_extract():
+    url = "https://www.sec.gov/Archives/edgar/daily-index/bulkdata/submissions.zip"
+
+    zip_path = r"C:\Users\andre\Downloads\submissions.zip"
+
+    with limited_get(url) as r:
+        r.raise_for_status()
+
+        with open(zip_path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+    print(f"Downloaded to {zip_path}")
+
+    extract_cik_jsons(cik_to_ticker.keys(), zip_path, SUBMISSIONS_STOCKS_DIR)
+    extract_cik_jsons(CIK_TO_FILER.keys(), zip_path, SUBMISSIONS_FILERS_DIR)
 
 
 def main():
