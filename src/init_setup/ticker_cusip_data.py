@@ -244,7 +244,7 @@ def _extract_new_common_stock_cusips(f_path_13f, known_cusips, known_cusip_to_is
         for row in reader:
             title = row.get('TITLE_OF_CLASS', '').strip().upper()
             issuer = normalize_issuer_name(row.get('NAME_OF_ISSUER', ''))
-            cusip = row.get('CUSIP', '').strip()
+            cusip = row.get('CUSIP', '').strip().upper()
 
             if not (title.startswith('COM') or title == 'COM NEW'):
                 continue
