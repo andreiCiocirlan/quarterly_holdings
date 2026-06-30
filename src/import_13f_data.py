@@ -338,21 +338,42 @@ def insert_holdings(cur, accession_nr, df):
     query = f"""
         INSERT INTO holdings ({', '.join(columns)})
         VALUES {values_placeholder}
-        ON CONFLICT (accession_nr, ticker)
-        DO UPDATE SET
-        rank = EXCLUDED.rank,
-        share_amount = EXCLUDED.share_amount,
-        share_value = EXCLUDED.share_value,
-        percentage = EXCLUDED.percentage,
-        change_amount = EXCLUDED.change_amount,
-        change_pct = EXCLUDED.change_pct,
-        ownership_pct = EXCLUDED.ownership_pct;
     """
 
     # Flatten data_to_insert list of tuples into a single tuple
     flattened_values = [item for sublist in data_to_insert for item in sublist]
 
     cur.execute(query, flattened_values)
+
+
+def delete_accessions(accessions):
+    """
+    Deletes all holdings for the given accession numbers.
+    """
+    accessions = list(dict.fromkeys(accessions))  # Remove duplicates while preserving order
+
+    if not accessions:
+        return
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            DELETE FROM holdings
+            WHERE accession_nr = ANY(%s)
+            """,
+            (accessions,)
+        )
+        conn.commit()
+        print(f"Deleted holdings for {len(accessions)} accession(s).")
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
 
 
 def import_quarterly_file(db_conn, cik, accession_nr, year, quarter, csv_path):
@@ -510,6 +531,22 @@ def import_all_files_parallel(base_dir=BASE_DIR_FINAL, max_workers=8, accessions
 
     print(f"Total CSV files to process: {len(all_csv_files)}")
 
+    # ------------------------------------------------------------------
+    # Delete existing holdings for these accessions before importing
+    # ------------------------------------------------------------------
+    if accessions is not None:
+        accessions_to_delete = list(accessions)
+    else:
+        accessions_to_delete = [
+            f.stem.split('-')[-1]
+            for f in all_csv_files
+        ]
+
+    delete_accessions(accessions_to_delete)
+
+    # ------------------------------------------------------------------
+    # Import in parallel
+    # ------------------------------------------------------------------
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(process_single_csv, csv_file) for csv_file in all_csv_files]
 
