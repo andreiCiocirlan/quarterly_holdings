@@ -444,9 +444,30 @@ def combine_quarterly_files(folder_path, filer_name, cik):
         # Filter for valid cusips
         combined_df = combined_df[combined_df['cusip'].astype(str).isin(cusip_set)].copy()
 
-        # Filter out rows where put_call is 'Put' or 'Call'
+        # Filter out rows where put_call, title_of_class is 'PUT' or 'CALL'
+        mask = pd.Series(False, index=combined_df.index)
+
         if 'put_call' in combined_df.columns:
-            combined_df = combined_df[~combined_df['put_call'].isin(['Put', 'Call'])].copy()
+            mask |= (
+                combined_df['put_call']
+                .fillna('')
+                .astype(str)
+                .str.strip()
+                .str.upper()
+                .isin(['PUT', 'CALL'])
+            )
+
+        if 'title_of_class' in combined_df.columns:
+            mask |= (
+                combined_df['title_of_class']
+                .fillna('')
+                .astype(str)
+                .str.strip()
+                .str.upper()
+                .isin(['PUT', 'CALL'])
+            )
+
+        combined_df = combined_df[~mask].copy()
 
         # Add ticker column
         combined_df['ticker'] = combined_df['cusip'].map(cusip_to_ticker)
