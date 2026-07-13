@@ -47,7 +47,7 @@ RAW_PARSED_HOLDINGS_DIRECTORIES = [
 ]
 
 TARGET_YEAR = "2026"
-TARGET_QUARTER = "Q1"
+TARGET_QUARTER = "Q2"
 
 
 def _build_cik_to_accession():
