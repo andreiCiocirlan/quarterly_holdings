@@ -95,6 +95,12 @@ def create_and_populate_filer_accession_metadata(ciks=None):
 
     metadata_df = pd.DataFrame(metadata).astype(str)
 
+    existing_dates = (
+        existing_df
+        .set_index(['cik', 'accession_nr'])['filing_date']
+        .to_dict()
+    )
+
     # --- Step 3: Get filing_date for each accession ---
     results = []
     for _, row in metadata_df.iterrows():
@@ -105,6 +111,10 @@ def create_and_populate_filer_accession_metadata(ciks=None):
             filing_date = get_filing_date_from_submission(filer_submission_filename, accession_nr)
         except FileNotFoundError:
             filing_date = ''
+
+        if not filing_date:
+            filing_date = existing_dates.get((cik, accession_nr), '')
+
         results.append({
             "cik": cik,
             "accession_nr": accession_nr,
