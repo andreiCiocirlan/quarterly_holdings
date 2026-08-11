@@ -82,21 +82,21 @@ def has_q_end_price(ticker, year, quarter):
     return key in QUARTER_END_PRICE_DICT and QUARTER_END_PRICE_DICT[key] is not None
 
 
-def get_prices_for_all_quarters(base_dir, year_quarter_list, tickers_to_include=None):
+def get_prices_for_all_quarters(base_dir, year_quarter_list, tickers_to_process):
     records = []
 
     for year, quarter in year_quarter_list:
-        ticker_prices = get_prices_per_ticker(base_dir, year, quarter)  # Your existing function
+        ticker_prices = get_prices_per_ticker(base_dir, tickers_to_process, year, quarter)  # Your existing function
 
-        # Filter tickers with min count >= 10 and by tickers_to_include if provided
+        # Filter tickers with min count >= 10 and by tickers_to_process if provided
         ticker_prices_filtered = {
             ticker: counts
             for ticker, counts in ticker_prices.items()
-            if sum(counts.values()) >= 10 and (tickers_to_include is None or ticker in tickers_to_include)
+            if sum(counts.values()) >= 10 and (tickers_to_process is None or ticker in tickers_to_process)
         }
 
         most_freq_price = get_most_frequent_price_per_ticker(ticker_prices_filtered)
-        print(f'Did not update {year} {quarter} tickers: {tickers_to_include - set(ticker_prices_filtered.keys())}')
+        print(f'Did not update {year} {quarter} tickers: {tickers_to_process - set(ticker_prices_filtered.keys())}')
 
         for ticker, price in most_freq_price.items():
             records.append({'ticker': ticker, 'year': year, 'quarter': quarter, 'quarter_end_price': price})
@@ -104,7 +104,7 @@ def get_prices_for_all_quarters(base_dir, year_quarter_list, tickers_to_include=
     return pd.DataFrame(records)
 
 
-def get_prices_per_ticker(base_dir, year='2025', quarter='Q1'):
+def get_prices_per_ticker(base_dir, tickers_to_process, year='2025', quarter='Q1'):
     ticker_prices = defaultdict(Counter)
 
     for root, dirs, files in os.walk(base_dir):
@@ -114,6 +114,11 @@ def get_prices_per_ticker(base_dir, year='2025', quarter='Q1'):
 
                 try:
                     df = pd.read_csv(file_path)
+
+                    # Only keep the tickers we actually want
+                    if tickers_to_process is not None:
+                        df = df[df['ticker'].isin(tickers_to_process)]
+
                     df = df[df['share_amount'] >= 1000]
 
                     # Calculate quarter_end_price as before

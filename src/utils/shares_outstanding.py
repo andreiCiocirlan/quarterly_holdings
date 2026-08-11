@@ -464,19 +464,22 @@ def get_tickers_without_shares_outstanding(quarter: str = "Q1", year=2025):
     return tickers_without_data
 
 
-def add_quarter_end_price_to_sh_outstanding_file(year_quarter_list):
+def add_quarter_end_price_to_sh_outstanding_file(year_quarter_list, tickers_to_process):
     # Load existing shares outstanding file, including existing quarter_end_price column
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE,
                      dtype={'ticker': str, 'year': str, 'quarter': str, 'outstanding_shares': 'Int64'})
 
-    # Filter df to rows for the requested year_quarter_list to update prices only here
-    mask = df.apply(lambda row: [row['year'], row['quarter']] in year_quarter_list, axis=1)
-
-    # Get distinct tickers in df
-    outstanding_shares_tickers = set(df['ticker'].unique())
+    # Only update rows belonging to the requested quarters AND the tickers we explicitly want to process.
+    mask = (
+            df.apply(
+                lambda row: [row['year'], row['quarter']] in year_quarter_list,
+                axis=1
+            )
+            & df['ticker'].isin(tickers_to_process)
+    )
 
     # Get price DataFrame for all requested quarters/tickers
-    price_df = get_prices_for_all_quarters(BASE_DIR_FINAL, year_quarter_list, outstanding_shares_tickers)
+    price_df = get_prices_for_all_quarters(BASE_DIR_FINAL, year_quarter_list, tickers_to_process)
 
     if price_df.empty:
         print("No quarter-end prices found.")
@@ -554,7 +557,11 @@ def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, lookback=1,for
     df = pd.read_csv(STOCKS_SHS_Q_END_PRICES_FILE)
 
     # Use provided dict or fall back to full cik_to_ticker
-    cik_to_ticker_dict = cik_tickers_to_process or cik_to_ticker
+    cik_to_ticker_dict = (
+        cik_tickers_to_process
+        if cik_tickers_to_process is not None
+        else cik_to_ticker
+    )
 
     for cik, ticker in cik_to_ticker_dict.items():
         if not has_q_end_price(ticker, year, quarter):
@@ -569,7 +576,7 @@ def update_year_quarter_stocks_shs_and_q_end_price(year, quarter, lookback=1,for
     df['outstanding_shares'] = pd.to_numeric(df['outstanding_shares'], errors='coerce').astype('Int64')
     df.to_csv(STOCKS_SHS_Q_END_PRICES_FILE, index=False)
 
-    add_quarter_end_price_to_sh_outstanding_file(year_quarter_list=[ [year, quarter]])
+    add_quarter_end_price_to_sh_outstanding_file(year_quarter_list=[ [year, quarter]], tickers_to_process = set(cik_to_ticker_dict.values()))
     check_duplicate_rows_shs_file(df)
 
 
