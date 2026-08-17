@@ -83,6 +83,9 @@ def has_q_end_price(ticker, year, quarter):
 
 
 def get_prices_for_all_quarters(base_dir, year_quarter_list, tickers_to_process):
+    if tickers_to_process is not None:
+        tickers_to_process = set(tickers_to_process)
+
     records = []
 
     for year, quarter in year_quarter_list:
