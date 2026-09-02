@@ -433,7 +433,13 @@ def combine_quarterly_files(folder_path, filer_name, cik):
         if not fname.endswith('.csv'):
             continue
         fpath = os.path.join(folder_path, fname)
-        df = pd.read_csv(fpath)
+
+        try:
+            df = pd.read_csv(fpath)
+        except pd.errors.EmptyDataError:
+            print(f"Skipping empty CSV: {fpath}")
+            continue
+
         # Use lower for robustness
         conformed_date = str(df.iloc[0]['conformed_date']) if 'conformed_date' in df.columns else str(df.iloc[0]['CONFORMED_DATE'])
         files_by_date.setdefault(conformed_date, []).append(fpath)
